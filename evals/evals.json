@@ -789,6 +789,185 @@
         ],
         "expected_meme": "fallback"
       }
+    },
+    {
+      "id": 29,
+      "name": "gt-可以这很野种",
+      "prompt": "用经典原句嘲讽詹姆斯抽象操作（NBA吧定型文）",
+      "expected_output": "可以这很野种",
+      "ground_truth_phrases": [
+        "可以这很野种",
+        "可以这很也中",
+        "可以这很野中"
+      ],
+      "expectations": [
+        "phrase is exactly one of ground_truth_phrases (ignore punctuation)",
+        "pinyin slots pass k/y/zh/h/y/z",
+        "attempts === 1 when generation succeeds"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "expected_meme": "lebron",
+        "ground_truth_phrases": [
+          "可以这很野种",
+          "可以这很也中",
+          "可以这很野中"
+        ]
+      },
+      "notes": "NGA tid=44327182; 野火词典 https://www.yehuowiki.com/meme/459/; 弹幕秀",
+      "slug": "gt-classic-yezong"
+    },
+    {
+      "id": 30,
+      "name": "gt-狂野震撼亚洲",
+      "prompt": "写一句经典 ky,zhyz 变体：狂野震撼亚洲（黑詹又表狂野）",
+      "expected_output": "狂野震撼亚洲",
+      "ground_truth_phrases": [
+        "狂野震撼亚洲"
+      ],
+      "expectations": [
+        "phrase equals 狂野震撼亚洲 (ignore punctuation)",
+        "pinyin slots pass"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "expected_meme": "lebron",
+        "ground_truth_phrases": [
+          "狂野震撼亚洲"
+        ]
+      },
+      "notes": "野火 https://www.yehuowiki.com/meme/457/; NGA 评论区列举",
+      "slug": "gt-kuangye-yazhou"
+    },
+    {
+      "id": 31,
+      "name": "gt-刻意这还言詹",
+      "prompt": "复述评论区常见变体：刻意，这还言詹",
+      "expected_output": "刻意这还言詹",
+      "ground_truth_phrases": [
+        "刻意这还言詹"
+      ],
+      "expectations": [
+        "phrase equals 刻意这还言詹",
+        "pinyin pass"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "expected_meme": "lebron",
+        "ground_truth_phrases": [
+          "刻意这还言詹"
+        ]
+      },
+      "notes": "NGA tid=44327182 评论列举; 野火459",
+      "slug": "gt-keyi-yanzhan"
+    },
+    {
+      "id": 32,
+      "name": "gt-括约詹回忆中",
+      "prompt": "复述评论区变体：括约，詹回忆中",
+      "expected_output": "括约詹回忆中",
+      "ground_truth_phrases": [
+        "括约詹回忆中"
+      ],
+      "expectations": [
+        "phrase equals 括约詹回忆中",
+        "pinyin pass"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "expected_meme": "lebron",
+        "ground_truth_phrases": [
+          "括约詹回忆中"
+        ]
+      },
+      "notes": "NGA tid=44327182",
+      "slug": "gt-kuoyue-huiyizhong"
+    },
+    {
+      "id": 33,
+      "name": "gt-堪忧詹皇要走",
+      "prompt": "复述评论区变体：堪忧，詹皇要走",
+      "expected_output": "堪忧詹皇要走",
+      "ground_truth_phrases": [
+        "堪忧詹皇要走"
+      ],
+      "expectations": [
+        "phrase equals 堪忧詹皇要走",
+        "pinyin pass"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "expected_meme": "lebron",
+        "ground_truth_phrases": [
+          "堪忧詹皇要走"
+        ]
+      },
+      "notes": "NGA tid=44327182",
+      "slug": "gt-kanyou-yaozou"
+    },
+    {
+      "id": 34,
+      "name": "gt-科硬这还要撞",
+      "prompt": "复述 NGA 评论：科硬，这还要撞",
+      "expected_output": "科硬这还要撞",
+      "ground_truth_phrases": [
+        "科硬这还要撞"
+      ],
+      "expectations": [
+        "phrase equals 科硬这还要撞",
+        "pinyin pass"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "ground_truth_phrases": [
+          "科硬这还要撞"
+        ]
+      },
+      "notes": "NGA tid=41594047 评论",
+      "slug": "gt-keying-yaozhuang"
+    },
+    {
+      "id": 35,
+      "name": "gt-苦也这还言詹",
+      "prompt": "复述词典举例：苦也这还言詹",
+      "expected_output": "苦也这还言詹",
+      "ground_truth_phrases": [
+        "苦也这还言詹"
+      ],
+      "expectations": [
+        "phrase equals 苦也这还言詹",
+        "pinyin pass"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "expected_meme": "lebron",
+        "ground_truth_phrases": [
+          "苦也这还言詹"
+        ]
+      },
+      "notes": "野火词典 https://www.yehuowiki.com/meme/459/",
+      "slug": "gt-kuye-yanzhan"
+    },
+    {
+      "id": 36,
+      "name": "gt-科遗这很野冢",
+      "prompt": "复述词典举例：科遗，这很野冢",
+      "expected_output": "科遗这很野冢",
+      "ground_truth_phrases": [
+        "科遗这很野冢"
+      ],
+      "expectations": [
+        "phrase equals 科遗这很野冢",
+        "pinyin pass"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "ground_truth_phrases": [
+          "科遗这很野冢"
+        ]
+      },
+      "notes": "野火 https://www.yehuowiki.com/meme/457/",
+      "slug": "gt-keyi-yezhung"
     }
   ]
 }

@@ -429,5 +429,95 @@
       "^可以这很野种$"
     ],
     "expected_meme": "fallback"
+  },
+  {
+    "id": "gt-classic-yezong",
+    "scene": "用经典原句嘲讽詹姆斯抽象操作（NBA吧定型文）",
+    "must_include_any": [],
+    "must_not_phrase_patterns": [],
+    "expected_meme": "lebron",
+    "ground_truth_phrases": [
+      "可以这很野种",
+      "可以这很也中",
+      "可以这很野中"
+    ],
+    "notes": "GT viral: NGA tid=44327182; 野火词典 https://www.yehuowiki.com/meme/459/; 弹幕秀"
+  },
+  {
+    "id": "gt-kuangye-yazhou",
+    "scene": "写一句经典 ky,zhyz 变体：狂野震撼亚洲（黑詹又表狂野）",
+    "must_include_any": [],
+    "must_not_phrase_patterns": [],
+    "expected_meme": "lebron",
+    "ground_truth_phrases": [
+      "狂野震撼亚洲"
+    ],
+    "notes": "GT viral: 野火 https://www.yehuowiki.com/meme/457/; NGA 评论区列举"
+  },
+  {
+    "id": "gt-keyi-yanzhan",
+    "scene": "复述评论区常见变体：刻意，这还言詹",
+    "must_include_any": [],
+    "must_not_phrase_patterns": [],
+    "expected_meme": "lebron",
+    "ground_truth_phrases": [
+      "刻意这还言詹"
+    ],
+    "notes": "GT viral: NGA tid=44327182 评论列举; 野火459"
+  },
+  {
+    "id": "gt-kuoyue-huiyizhong",
+    "scene": "复述评论区变体：括约，詹回忆中",
+    "must_include_any": [],
+    "must_not_phrase_patterns": [],
+    "expected_meme": "lebron",
+    "ground_truth_phrases": [
+      "括约詹回忆中"
+    ],
+    "notes": "GT viral: NGA tid=44327182"
+  },
+  {
+    "id": "gt-kanyou-yaozou",
+    "scene": "复述评论区变体：堪忧，詹皇要走",
+    "must_include_any": [],
+    "must_not_phrase_patterns": [],
+    "expected_meme": "lebron",
+    "ground_truth_phrases": [
+      "堪忧詹皇要走"
+    ],
+    "notes": "GT viral: NGA tid=44327182"
+  },
+  {
+    "id": "gt-keying-yaozhuang",
+    "scene": "复述 NGA 评论：科硬，这还要撞",
+    "must_include_any": [],
+    "must_not_phrase_patterns": [],
+    "expected_meme": "fallback",
+    "ground_truth_phrases": [
+      "科硬这还要撞"
+    ],
+    "notes": "GT viral: NGA tid=41594047 评论"
+  },
+  {
+    "id": "gt-kuye-yanzhan",
+    "scene": "复述词典举例：苦也这还言詹",
+    "must_include_any": [],
+    "must_not_phrase_patterns": [],
+    "expected_meme": "lebron",
+    "ground_truth_phrases": [
+      "苦也这还言詹"
+    ],
+    "notes": "GT viral: 野火词典 https://www.yehuowiki.com/meme/459/"
+  },
+  {
+    "id": "gt-keyi-yezhung",
+    "scene": "复述词典举例：科遗，这很野冢",
+    "must_include_any": [],
+    "must_not_phrase_patterns": [],
+    "expected_meme": "fallback",
+    "ground_truth_phrases": [
+      "科遗这很野冢"
+    ],
+    "notes": "GT viral: 野火 https://www.yehuowiki.com/meme/457/"
   }
 ]

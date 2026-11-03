@@ -1,0 +1,182 @@
+{
+  "description": "Attested ky,zhyz viral phrases from Chinese community explainers/comments. Only validator-PASS phrases are gold; rejected listed for transparency.",
+  "sources": [
+    "https://ngabbs.com/read.php?tid=44327182",
+    "https://bbs.nga.cn/read.php?tid=41594047",
+    "https://www.yehuowiki.com/meme/459/",
+    "https://www.yehuowiki.com/meme/457/",
+    "https://www.danmuxiu.cn/3273.html",
+    "https://www.bilibili.com/video/BV1Wx4y1H74n/"
+  ],
+  "cases": [
+    {
+      "id": "gt-classic-yezong",
+      "name": "gt-可以这很野种",
+      "prompt": "用经典原句嘲讽詹姆斯抽象操作（NBA吧定型文）",
+      "expected_output": "可以这很野种",
+      "ground_truth_phrases": [
+        "可以这很野种",
+        "可以这很也中",
+        "可以这很野中"
+      ],
+      "expectations": [
+        "phrase is exactly one of ground_truth_phrases (ignore punctuation)",
+        "pinyin slots pass k/y/zh/h/y/z",
+        "attempts === 1 when generation succeeds"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "expected_meme": "lebron"
+      },
+      "notes": "NGA tid=44327182; 野火词典 https://www.yehuowiki.com/meme/459/; 弹幕秀"
+    },
+    {
+      "id": "gt-kuangye-yazhou",
+      "name": "gt-狂野震撼亚洲",
+      "prompt": "写一句经典 ky,zhyz 变体：狂野震撼亚洲（黑詹又表狂野）",
+      "expected_output": "狂野震撼亚洲",
+      "ground_truth_phrases": [
+        "狂野震撼亚洲"
+      ],
+      "expectations": [
+        "phrase equals 狂野震撼亚洲 (ignore punctuation)",
+        "pinyin slots pass"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "expected_meme": "lebron"
+      },
+      "notes": "野火 https://www.yehuowiki.com/meme/457/; NGA 评论区列举"
+    },
+    {
+      "id": "gt-keyi-yanzhan",
+      "name": "gt-刻意这还言詹",
+      "prompt": "复述评论区常见变体：刻意，这还言詹",
+      "expected_output": "刻意这还言詹",
+      "ground_truth_phrases": [
+        "刻意这还言詹"
+      ],
+      "expectations": [
+        "phrase equals 刻意这还言詹",
+        "pinyin pass"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "expected_meme": "lebron"
+      },
+      "notes": "NGA tid=44327182 评论列举; 野火459"
+    },
+    {
+      "id": "gt-kuoyue-huiyizhong",
+      "name": "gt-括约詹回忆中",
+      "prompt": "复述评论区变体：括约，詹回忆中",
+      "expected_output": "括约詹回忆中",
+      "ground_truth_phrases": [
+        "括约詹回忆中"
+      ],
+      "expectations": [
+        "phrase equals 括约詹回忆中",
+        "pinyin pass"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "expected_meme": "lebron"
+      },
+      "notes": "NGA tid=44327182"
+    },
+    {
+      "id": "gt-kanyou-yaozou",
+      "name": "gt-堪忧詹皇要走",
+      "prompt": "复述评论区变体：堪忧，詹皇要走",
+      "expected_output": "堪忧詹皇要走",
+      "ground_truth_phrases": [
+        "堪忧詹皇要走"
+      ],
+      "expectations": [
+        "phrase equals 堪忧詹皇要走",
+        "pinyin pass"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "expected_meme": "lebron"
+      },
+      "notes": "NGA tid=44327182"
+    },
+    {
+      "id": "gt-keying-yaozhuang",
+      "name": "gt-科硬这还要撞",
+      "prompt": "复述 NGA 评论：科硬，这还要撞",
+      "expected_output": "科硬这还要撞",
+      "ground_truth_phrases": [
+        "科硬这还要撞"
+      ],
+      "expectations": [
+        "phrase equals 科硬这还要撞",
+        "pinyin pass"
+      ],
+      "checks": {
+        "exact_gt": true
+      },
+      "notes": "NGA tid=41594047 评论"
+    },
+    {
+      "id": "gt-kuye-yanzhan",
+      "name": "gt-苦也这还言詹",
+      "prompt": "复述词典举例：苦也这还言詹",
+      "expected_output": "苦也这还言詹",
+      "ground_truth_phrases": [
+        "苦也这还言詹"
+      ],
+      "expectations": [
+        "phrase equals 苦也这还言詹",
+        "pinyin pass"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "expected_meme": "lebron"
+      },
+      "notes": "野火词典 https://www.yehuowiki.com/meme/459/"
+    },
+    {
+      "id": "gt-keyi-yezhung",
+      "name": "gt-科遗这很野冢",
+      "prompt": "复述词典举例：科遗，这很野冢",
+      "expected_output": "科遗这很野冢",
+      "ground_truth_phrases": [
+        "科遗这很野冢"
+      ],
+      "expectations": [
+        "phrase equals 科遗这很野冢",
+        "pinyin pass"
+      ],
+      "checks": {
+        "exact_gt": true
+      },
+      "notes": "野火 https://www.yehuowiki.com/meme/457/"
+    }
+  ],
+  "rejected_community_variants": [
+    {
+      "phrase": "砍勇最会游走",
+      "reason": "第3字最=z 非 zh；社区常用但非严格 ky,zhyz",
+      "sources": [
+        "贴吧9024047195",
+        "NGA"
+      ]
+    },
+    {
+      "phrase": "刊用最会打野",
+      "reason": "声母不合",
+      "sources": [
+        "NGA41594047"
+      ]
+    },
+    {
+      "phrase": "狂野终极一战",
+      "reason": "极≠h",
+      "sources": [
+        "NGA39757163"
+      ]
+    }
+  ]
+}

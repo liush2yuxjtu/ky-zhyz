@@ -40,6 +40,8 @@ type Checks = {
   must_not_phrase_patterns?: string[];
   expected_meme: string | { must_not_topic: string } | { id_contains: string };
   poison_phrase?: string;
+  exact_gt?: boolean;
+  ground_truth_phrases?: string[];
 };
 
 type EvalCase = {
@@ -49,6 +51,9 @@ type EvalCase = {
   expected_output: string;
   expectations: string[];
   checks: Checks;
+  ground_truth_phrases?: string[];
+  notes?: string;
+  slug?: string;
 };
 
 type EvalsFile = {
@@ -106,6 +111,19 @@ function parseArgs() {
     }
   }
   return { iteration, limit };
+}
+
+
+function normalizeHan(s: string): string {
+  return (s || "").replace(/[\s,，、。.!！？?；;：:\"'“”]/g, "");
+}
+
+function gtPhrases(ev: EvalCase): string[] {
+  const fromChecks = ev.checks.ground_truth_phrases ?? [];
+  const fromTop = ev.ground_truth_phrases ?? [];
+  const out = [...fromTop, ...fromChecks];
+  if (ev.checks.exact_gt && ev.expected_output) out.push(ev.expected_output);
+  return [...new Set(out.map(normalizeHan).filter(Boolean))];
 }
 
 function checkExpectedMeme(
@@ -318,6 +336,48 @@ function gradeEval(args: {
       });
       continue;
     }
+
+    // Ground-truth exact / allow-list (viral community phrases)
+    if (
+      ev.checks.exact_gt ||
+      (ev.ground_truth_phrases && ev.ground_truth_phrases.length) ||
+      lower.includes("ground_truth") ||
+      text.includes("ground_truth_phrases") ||
+      text.includes("equals") ||
+      text.includes("exactly one of") ||
+      text.includes("原句")
+    ) {
+      const allowed = gtPhrases(ev);
+      if (allowed.length) {
+        if (!live) {
+          graded.push({
+            text,
+            passed: false,
+            evidence: "EVAL_LIVE not set — cannot check GT phrase",
+          });
+          continue;
+        }
+        if (!live.ok || !live.phrase) {
+          graded.push({
+            text,
+            passed: false,
+            evidence: `generation failed; want one of ${allowed.join("|")}`,
+          });
+          continue;
+        }
+        const got = normalizeHan(live.phrase);
+        const passed = allowed.includes(got);
+        graded.push({
+          text,
+          passed,
+          evidence: passed
+            ? `GT hit phrase=${got}`
+            : `GT miss got=${got} want∈{${allowed.join(",")}}`,
+        });
+        continue;
+      }
+    }
+
 
     // Empty shell
     if (
