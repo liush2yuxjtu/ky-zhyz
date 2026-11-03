@@ -213,7 +213,7 @@ export default function Home() {
       <section className="rounded-lg border border-stroke bg-panel p-4 sm:p-5">
         <label
           htmlFor="scene"
-          className="mb-2 block font-mono text-[11px] text-mute"
+          className="mb-2 block text-[13px] font-medium text-mute"
         >
           场景输入
         </label>
@@ -232,9 +232,9 @@ export default function Home() {
           placeholder="排位连跪 / 奶茶加错糖 / …"
           disabled={loading}
           autoFocus
-          className="w-full resize-y rounded-md border border-stroke bg-ink px-3 py-3 font-body text-[15px] text-text outline-none placeholder:text-mute focus:border-magenta focus:shadow-[0_0_0_3px_rgba(255,43,214,0.2)] disabled:opacity-60"
+          className="w-full resize-y rounded-md border border-stroke bg-ink px-3 py-3 font-body text-[15px] text-text caret-magenta outline-none placeholder:text-mute focus:border-magenta focus:shadow-[0_4px_0_0_rgba(255,43,214,0.35)] disabled:opacity-60"
         />
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="chip-scroll mt-3 flex gap-2 overflow-x-auto pb-2">
           {EXAMPLES.map((ex, i) => (
             <button
               key={ex.label}
@@ -280,9 +280,9 @@ export default function Home() {
       </div>
 
       {(loading || showResult) && (
-        <section className="mt-6 rounded-lg border border-stroke bg-panel/90 p-4 shadow-[inset_0_0_0_1px_rgba(255,43,214,0.08)] sm:p-6">
+        <section aria-live="polite" aria-busy={loading} className="mt-6 rounded-lg border border-stroke bg-panel/90 p-4 sm:p-6">
           {loading && (
-            <p className="py-6 text-center font-mono text-sm text-magenta animate-pulse">
+            <p className="py-6 text-center text-sm text-magenta motion-safe:animate-pulse">
               {loadingLabel}
             </p>
           )}
@@ -290,18 +290,23 @@ export default function Home() {
             <>
               <SlotBoard slots={slots} filled />
               {display && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!canMeme) return;
-                    track("meme_open", {});
-                    setMemeOpen(true);
-                  }}
-                  className="mt-5 block w-full text-center font-body text-3xl font-black tracking-wide text-magenta transition hover:brightness-110 sm:text-4xl"
-                  title={canMeme ? "点开梗图" : undefined}
-                >
-                  {display}
-                </button>
+                canMeme ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      track("meme_open", {});
+                      setMemeOpen(true);
+                    }}
+                    className="mt-5 block w-full text-center font-body text-3xl font-black tracking-wide text-magenta transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta sm:text-4xl"
+                    title="点开梗图"
+                  >
+                    {display}
+                  </button>
+                ) : (
+                  <p className="mt-5 text-center font-body text-3xl font-black tracking-wide text-magenta sm:text-4xl">
+                    {display}
+                  </p>
+                )
               )}
               {gloss && (
                 <p className="mt-2 text-center text-sm text-mute">{gloss}</p>
@@ -314,7 +319,7 @@ export default function Home() {
                       track("meme_open", {});
                       setMemeOpen(true);
                     }}
-                    className="rounded-full border border-lime/50 bg-lime/10 px-4 py-2 font-body text-sm font-bold text-lime transition hover:bg-lime hover:text-ink"
+                    className="inline-flex min-h-11 items-center rounded-md border border-lime/50 bg-lime/10 px-4 font-body text-sm font-bold text-lime transition hover:bg-lime hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime"
                   >
                     看梗图
                   </button>

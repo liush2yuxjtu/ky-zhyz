@@ -39,11 +39,11 @@ export function MemePop({ open, onClose, phrase, title, memeSrc, note }: Props) 
       onClick={onClose}
     >
       <div
-        className="meme-burst relative w-full max-w-sm rounded-lg border-2 border-magenta bg-panel p-3 shadow-[0_0_40px_rgba(255,43,214,0.45)]"
+        className="meme-burst relative w-full max-w-sm rounded-lg border-2 border-magenta bg-panel p-3 shadow-[0_8px_28px_rgba(255,43,214,0.35)]"
         onClick={(e) => e.stopPropagation()}
       >
         {title ? (
-          <p className="mb-2 text-center font-mono text-[10px] text-mute">
+          <p className="mb-2 text-center text-[12px] text-mute">
             {title}
           </p>
         ) : null}

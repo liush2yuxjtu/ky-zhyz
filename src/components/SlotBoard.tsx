@@ -15,7 +15,7 @@ export function SlotBoard({ slots, filled }: Props) {
   return (
     <div className="w-full">
       <div className="mb-3 flex items-end justify-between gap-3">
-        <p className="font-mono text-[11px] tracking-widest text-mute">
+        <p className="text-[13px] font-medium text-mute">
           六字已齐
         </p>
         <p className="font-display text-[10px] leading-none text-magenta">
@@ -40,7 +40,7 @@ export function SlotBoard({ slots, filled }: Props) {
                   "relative flex aspect-square flex-col items-center justify-center rounded-md border-2 bg-panel-2",
                   show && filled ? "slot-fill" : "",
                   show
-                    ? "border-lime shadow-[0_0_18px_rgba(57,255,20,0.35)]"
+                    ? "border-lime shadow-[0_4px_16px_rgba(57,255,20,0.28)]"
                     : "border-stroke border-dashed",
                 ].join(" ")}
               >

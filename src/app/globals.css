@@ -115,3 +115,24 @@ body {
 .meme-burst {
   animation: meme-burst 520ms cubic-bezier(0.2, 1.2, 0.3, 1) both;
 }
+
+
+.chip-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--magenta-dim) var(--panel-2);
+}
+.chip-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.chip-scroll::-webkit-scrollbar-track {
+  background: var(--panel-2);
+  border-radius: 999px;
+}
+.chip-scroll::-webkit-scrollbar-thumb {
+  background: var(--magenta-dim);
+  border-radius: 999px;
+}
+
+a {
+  text-underline-offset: 0.18em;
+}
