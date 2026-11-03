@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   matchTopic,
   memeSrc,
+  clientMemeSrc,
   getAllTopics,
   stripTemplateNoise,
 } from "./topics";
@@ -74,5 +75,22 @@ describe("matchTopic", () => {
   it("stripTemplateNoise removes shell tokens", () => {
     expect(stripTemplateNoise("可以这很野种")).not.toContain("野种");
     expect(stripTemplateNoise("ky,zhyz 野种")).not.toMatch(/野种|ky/i);
+  });
+
+  it("option A: fallback scenes expose no client memeSrc; keyword hit still does", () => {
+    for (const scene of ["奶茶", "房租", "房租又涨了", "排队半小时买奶茶还加错糖"]) {
+      const m = matchTopic({ scene });
+      expect(m.via).toBe("fallback");
+      expect(m.score).toBe(0);
+      expect(clientMemeSrc(m)).toBeNull();
+      // raw memeSrc still resolves pepe_raise — must NOT be exposed to client
+      expect(memeSrc(m.topic)).toMatch(/pepe|abstract|generic|\/memes\//i);
+    }
+
+    const hit = matchTopic({ scene: "詹皇又甩锅还说队友不懂球" });
+    expect(hit.via).toBe("keyword");
+    expect(hit.topic.id).toBe("lebron");
+    expect(clientMemeSrc(hit)).toMatch(/^\/memes\//);
+    expect(clientMemeSrc(hit)).toBe(memeSrc(hit.topic));
   });
 });

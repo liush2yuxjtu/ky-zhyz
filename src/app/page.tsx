@@ -20,7 +20,8 @@ type TopicPayload = {
   name: string;
   note: string;
   phrase: string;
-  memeSrc: string;
+  /** Absent/null on fallback — Option A hides「看梗图」 */
+  memeSrc?: string | null;
 };
 
 type ApiOk = {
@@ -359,6 +360,12 @@ export default function Home() {
               setMemeTitle(data.topic.name || "");
               setMemeSrc(data.topic.memeSrc);
               setMemeNote(data.topic.note || "");
+            } else {
+              // Option A / locked regen: clear stale pepe_raise fallback meme
+              setMemeTitle("");
+              setMemeSrc("");
+              setMemeNote("");
+              setMemeOpen(false);
             }
             setError(null);
             setRetryTick(0);

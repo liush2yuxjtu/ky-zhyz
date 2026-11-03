@@ -4,7 +4,7 @@ import {
   sanitizeAvoid,
   sanitizeLocks,
 } from "@/lib/deepseek";
-import { matchTopic, memeSrc } from "@/lib/topics";
+import { matchTopic, clientMemeSrc } from "@/lib/topics";
 
 export const runtime = "nodejs";
 
@@ -102,7 +102,8 @@ export async function POST(req: Request) {
             name: match.topic.name,
             note: match.topic.note,
             phrase: match.topic.phrase,
-            memeSrc: memeSrc(match.topic),
+            // Option A: omit meme on fallback so「看梗图」stays hidden
+            memeSrc: clientMemeSrc(match),
           },
         });
         controller.close();

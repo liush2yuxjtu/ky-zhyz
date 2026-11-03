@@ -79,6 +79,17 @@ export function memeSrc(topic: Topic): string {
 }
 
 /**
+ * Option A: only expose a meme URL on real keyword hits.
+ * Fallback / score-0 / generic-abstract → null (hide「看梗图」).
+ */
+export function clientMemeSrc(match: TopicMatch): string | null {
+  if (match.via !== "keyword" || match.score <= 0) return null;
+  if (match.topic.id === "generic-abstract") return null;
+  const src = memeSrc(match.topic);
+  return src || null;
+}
+
+/**
  * Scene-first keyword match.
  * - Primary score from `scene` only.
  * - `phrase` / `gloss` are weak secondary, after stripping template noise
