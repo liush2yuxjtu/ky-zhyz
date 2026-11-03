@@ -232,7 +232,7 @@ export default function Home() {
           placeholder="排位连跪 / 奶茶加错糖 / …"
           disabled={loading}
           autoFocus
-          className="w-full resize-y rounded-md border border-stroke bg-ink px-3 py-3 font-body text-[15px] text-text caret-magenta outline-none placeholder:text-mute focus:border-magenta focus:shadow-[0_4px_0_0_rgba(255,43,214,0.35)] disabled:opacity-60"
+          className="w-full resize-y rounded-md border border-stroke bg-ink px-3 py-3 font-body text-[15px] text-text caret-magenta outline-none placeholder:text-mute focus:border-magenta focus:shadow-[0_4px_0_0_rgba(255,43,214,0.35)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta disabled:opacity-60"
         />
         <div className="chip-scroll mt-3 flex gap-2 overflow-x-auto pb-2">
           {EXAMPLES.map((ex, i) => (
@@ -247,7 +247,7 @@ export default function Home() {
                 track("example_chip", { index: i, label: ex.label });
                 void generate(ex.scene, { fromExample: true });
               }}
-              className="inline-flex min-h-11 shrink-0 items-center rounded border border-stroke bg-ink px-3 font-mono text-[13px] text-mute transition hover:border-lime hover:text-lime focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime disabled:opacity-50"
+              className="inline-flex min-h-11 shrink-0 items-center rounded border border-stroke bg-ink px-3 font-body text-[13px] text-mute transition hover:border-lime hover:text-lime focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime disabled:opacity-50"
             >
               {ex.label}
             </button>
@@ -268,7 +268,7 @@ export default function Home() {
         )}
       </section>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stroke bg-ink/95 p-3 backdrop-blur sm:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stroke bg-ink/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:hidden">
         <button
           type="button"
           disabled={loading}
@@ -278,6 +278,12 @@ export default function Home() {
           {loading ? loadingLabel : "翻译成 ky,zhyz"}
         </button>
       </div>
+
+      {!loading && !showResult && (
+        <p className="mt-6 text-center text-[13px] text-mute">
+          写好场景后点「翻译成 ky,zhyz」，六字会出现在这里
+        </p>
+      )}
 
       {(loading || showResult) && (
         <section aria-live="polite" aria-busy={loading} className="mt-6 rounded-lg border border-stroke bg-panel/90 p-4 sm:p-6">

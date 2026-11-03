@@ -28,6 +28,12 @@ const mono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "ky,zhyz — 场景翻译机",
   description: "丢一句场景，吐出恰好六个汉字的 ky,zhyz 翻译。",
+  themeColor: "#050508",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "ky,zhyz",
+  },
 };
 
 export default function RootLayout({

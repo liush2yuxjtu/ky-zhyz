@@ -52,7 +52,7 @@ export function SlotBoard({ slots, filled }: Props) {
                 >
                   {show ? char : "·"}
                 </span>
-                <span className="mt-1 font-mono text-[10px] uppercase text-mute">
+                <span className="mt-1 font-mono text-[10px] tabular-nums text-mute">
                   {label}
                 </span>
               </div>
