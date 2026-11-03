@@ -38,12 +38,14 @@ type StreamEvent =
   | (ApiOk & { type: "result" })
   | (ApiFail & { type: "result" });
 
-const EXAMPLES = [
-  "詹皇又甩锅还说队友不懂球",
-  "Canyon转会抱团被叫三慕斯",
-  "蔡徐坤又被拿出来说篮球",
-  "老板雷军发布会又 are you ok",
-  "论文被审稿人批到体无完肤",
+/** Short chip label + real scene text (avoid AI-demo essay chips). */
+const EXAMPLES: { label: string; scene: string }[] = [
+  { label: "奶茶", scene: "奶茶加错糖还排队半小时" },
+  { label: "排位", scene: "排位连跪被坑队友甩锅" },
+  { label: "房租", scene: "房租又涨房东还不修灯" },
+  { label: "詹皇", scene: "詹皇打铁还甩锅" },
+  { label: "砍勇", scene: "复述评论区：砍勇最会游走" },
+  { label: "野种", scene: "用经典原句嘲讽詹姆斯抽象操作" },
 ];
 
 async function readGenerateStream(res: Response): Promise<ApiOk | ApiFail> {
@@ -221,27 +223,33 @@ export default function Home() {
           value={scene}
           onChange={(e) => setScene(e.target.value)}
           rows={3}
-          placeholder="例：排位遇到三慕斯开大还甩锅……"
+          placeholder="排位连跪 / 奶茶加错糖 / …"
           disabled={loading}
           autoFocus
           className="w-full resize-y rounded-md border border-stroke bg-ink px-3 py-3 font-body text-[15px] text-text outline-none placeholder:text-mute/60 focus:border-magenta focus:shadow-[0_0_0_3px_rgba(255,43,214,0.2)] disabled:opacity-60"
         />
-        <div className="mt-3 flex flex-wrap gap-2">
-          {EXAMPLES.map((ex, i) => (
-            <button
-              key={ex}
-              type="button"
-              disabled={loading}
-              onClick={() => {
-                setScene(ex);
-                track("example_chip", { index: i });
-                void generate(ex, { fromExample: true });
-              }}
-              className="rounded-full border border-stroke bg-panel-2 px-3 py-1 text-xs text-mute transition hover:border-lime hover:text-lime disabled:opacity-50"
-            >
-              {ex}
-            </button>
-          ))}
+        <div className="mt-3">
+          <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-mute/70">
+            试试
+          </p>
+          <div className="flex gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {EXAMPLES.map((ex, i) => (
+              <button
+                key={ex.label}
+                type="button"
+                disabled={loading}
+                title={ex.scene}
+                onClick={() => {
+                  setScene(ex.scene);
+                  track("example_chip", { index: i, label: ex.label });
+                  void generate(ex.scene, { fromExample: true });
+                }}
+                className="shrink-0 rounded border border-stroke bg-ink px-2.5 py-1 font-mono text-[12px] text-mute transition hover:border-lime hover:text-lime disabled:opacity-50"
+              >
+                {ex.label}
+              </button>
+            ))}
+          </div>
         </div>
         <button
           type="button"

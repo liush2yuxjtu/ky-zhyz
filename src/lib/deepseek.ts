@@ -47,9 +47,23 @@ type ModelJson = { phrase?: string; gloss?: string };
 /** Exported for developer hillclimb / evals — edit src/lib/system-prompt.txt (+ sync .ts), then `npm run eval:iteration`. */
 export const SYSTEM = SYSTEM_PROMPT;
 
+function diversityHint(scene: string): string {
+  // Stable-ish per-call salt so same scene can still diverge across clicks
+  const salt = Math.floor(Math.random() * 900 + 100);
+  const styles = [
+    "偏嘴炮短促",
+    "偏自嘲苦笑",
+    "偏暴躁吐槽",
+    "偏阴阳怪气",
+    "偏贴吧回帖口吻",
+  ];
+  const style = styles[salt % styles.length];
+  return `本次口味：${style}（盐${salt}）。禁止复用「X这狠要砸 / 空言这哄 / 这火一栽」空骨架；换锚点字与动词。`;
+}
+
 function buildUser(scene: string, repair?: string): string {
   if (!repair) {
-    return `场景：${scene}\n一次性输出合格 JSON。先按六格选字（优先口播表+合法锚点），默念 k-y-(z|zh)-h-y-z，再交卷。不会重试。`;
+    return `场景：${scene}\n${diversityHint(scene)}\n一次性输出合格 JSON。先按六格选字（优先口播表+合法锚点），默念 k-y-(z|zh)-h-y-z，再交卷。不会重试。`;
   }
   return `场景：${scene}\n上一版有格子首字母不合 ky,zhyz，已交回生成器：${repair}\n请输出新的 6 字 JSON，务必凑齐 k/y/(z|zh)/h/y/z。`;
 }
@@ -78,7 +92,8 @@ async function callDeepSeek(
     },
     body: JSON.stringify({
       model: MODEL,
-      temperature: 0.25,
+      temperature: 1.05,
+      top_p: 0.95,
       max_tokens: 200,
       response_format: { type: "json_object" },
       messages: [
