@@ -30,18 +30,14 @@ type ApiOk = {
 type ApiFail = {
   ok: false;
   error: string;
-  lastPhrase?: string;
-  lastGloss?: string;
-  validation?: ValidationResult;
   attempts?: number;
-  topic?: TopicPayload;
 };
 
 const EXAMPLES = [
   "詹皇又甩锅还说队友不懂球",
   "Canyon转会抱团被叫三慕斯",
   "蔡徐坤又被拿出来说篮球",
-  "老板雷军发布会又 arc you ok",
+  "老板雷军发布会又 are you ok",
   "论文被审稿人批到体无完肤",
 ];
 
@@ -54,7 +50,10 @@ function topicFromPayload(t?: TopicPayload): TopicMatch | null {
       phrase: t.phrase,
       keywords: t.matchedKeywords,
       note: t.note,
-      meme: { url: t.memeSrc, path: t.memeSrc.startsWith("/") ? t.memeSrc : undefined },
+      meme: {
+        url: t.memeSrc,
+        path: t.memeSrc.startsWith("/") ? t.memeSrc : undefined,
+      },
     },
     score: t.score,
     matchedKeywords: t.matchedKeywords,
@@ -69,18 +68,9 @@ export default function Home() {
   const [display, setDisplay] = useState("");
   const [gloss, setGloss] = useState("");
   const [slots, setSlots] = useState<CharVerdict[] | undefined>();
-  const [passed, setPassed] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [memeOpen, setMemeOpen] = useState(false);
   const [topicMatch, setTopicMatch] = useState<TopicMatch | null>(null);
-
-  const applyValidation = useCallback((v?: ValidationResult) => {
-    if (!v) {
-      setSlots(undefined);
-      return;
-    }
-    setSlots(v.slots);
-  }, []);
 
   const generate = useCallback(
     async (override?: string) => {
@@ -91,8 +81,13 @@ export default function Home() {
       }
       setLoading(true);
       setError(null);
-      setPassed(false);
       setMemeOpen(false);
+      // Don't flash previous / failing answers while regenerating
+      setDisplay("");
+      setGloss("");
+      setSlots(undefined);
+      setTopicMatch(null);
+      setAttempts(0);
 
       try {
         const res = await fetch("/api/generate", {
@@ -103,40 +98,39 @@ export default function Home() {
         const data = (await res.json()) as ApiOk | ApiFail;
         setAttempts(data.attempts ?? 0);
 
-        const matched =
-          topicFromPayload(data.topic) ??
-          matchTopic({
-            scene: text,
-            phrase: data.ok ? data.phrase : data.lastPhrase,
-            gloss: data.ok ? data.gloss : data.lastGloss,
-          });
-        setTopicMatch(matched);
-
-        if (data.ok) {
+        if (data.ok && data.validation?.pass) {
           setDisplay(data.display);
           setGloss(data.gloss);
-          applyValidation(data.validation);
-          setPassed(true);
+          setSlots(data.validation.slots);
+          setTopicMatch(
+            topicFromPayload(data.topic) ??
+              matchTopic({
+                scene: text,
+                phrase: data.phrase,
+                gloss: data.gloss,
+              }),
+          );
           setMemeOpen(true);
         } else {
-          const chars = data.validation?.chars ?? [];
-          const fallback =
-            chars.length === 6
-              ? `${chars[0]}${chars[1]}，${chars[2]}${chars[3]}${chars[4]}${chars[5]}`
-              : data.lastPhrase ?? "";
-          setDisplay(fallback);
-          setGloss(data.lastGloss ?? "");
-          applyValidation(data.validation);
-          setPassed(false);
-          setError(data.error || "仍有格子首字母不合 ky,zhyz");
+          // Exhausted / error — friendly message only, no fail slots
+          setDisplay("");
+          setGloss("");
+          setSlots(undefined);
+          setTopicMatch(null);
+          setError(
+            (!data.ok && data.error) ||
+              "这波没凑齐 ky,zhyz，点一下再试一次就好。",
+          );
         }
       } catch {
+        setDisplay("");
+        setSlots(undefined);
         setError("网络挂了，再点一次");
       } finally {
         setLoading(false);
       }
     },
-    [scene, applyValidation],
+    [scene],
   );
 
   return (
@@ -151,28 +145,28 @@ export default function Home() {
           <span className="text-lime">zhyz</span>
         </h1>
         <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-mute">
-          丢一句任何场景。DeepSeek 吐六字；检验器只问一件事：每个字的
-          <span className="text-text">首字母是否落在 k / y / zh / h / y / z</span>
-          （多音字任一读音命中即可）。红格＝首字母不合，会交回生成器重写，不是「注音写错了」。全过才弹梗图。
+          丢一句任何场景。服务端用 DeepSeek 吐六字，并自动按
+          <span className="text-text"> k / y / zh / h / y / z </span>
+          检验；不合就静默交回重写。你只会看到最终过检的六字和梗图。
         </p>
       </header>
 
       <section className="mb-8 rounded-lg border border-stroke bg-panel/90 p-4 shadow-[inset_0_0_0_1px_rgba(255,43,214,0.08)] sm:p-6">
         <SlotBoard slots={slots} filled={Boolean(slots)} />
-        {display && (
-          <p
-            className={[
-              "mt-5 text-center font-body text-3xl font-black tracking-wide sm:text-4xl",
-              passed ? "text-magenta" : "text-warn",
-            ].join(" ")}
-          >
+        {loading && (
+          <p className="mt-5 text-center font-mono text-sm text-magenta animate-pulse">
+            生成中…
+          </p>
+        )}
+        {!loading && display && (
+          <p className="mt-5 text-center font-body text-3xl font-black tracking-wide text-magenta sm:text-4xl">
             {display}
           </p>
         )}
-        {gloss && (
+        {!loading && gloss && (
           <p className="mt-2 text-center text-sm text-mute">{gloss}</p>
         )}
-        {topicMatch && (
+        {!loading && topicMatch && (
           <p className="mt-2 text-center font-mono text-[11px] text-lime/80">
             主题 · {topicMatch.topic.name}
             {topicMatch.via === "keyword"
@@ -180,9 +174,9 @@ export default function Home() {
               : " · 兜底"}
           </p>
         )}
-        {attempts > 0 && (
+        {!loading && attempts > 0 && display && (
           <p className="mt-1 text-center font-mono text-[10px] text-mute">
-            交回生成器 {attempts} 次 · 首字母不合就重写
+            已过检 · 内部尝试 {attempts} 次
           </p>
         )}
       </section>
@@ -200,18 +194,20 @@ export default function Home() {
           onChange={(e) => setScene(e.target.value)}
           rows={3}
           placeholder="例：排位遇到三慕斯开大还甩锅……"
-          className="w-full resize-y rounded-md border border-stroke bg-ink px-3 py-3 font-body text-[15px] text-text outline-none placeholder:text-mute/60 focus:border-magenta focus:shadow-[0_0_0_3px_rgba(255,43,214,0.2)]"
+          disabled={loading}
+          className="w-full resize-y rounded-md border border-stroke bg-ink px-3 py-3 font-body text-[15px] text-text outline-none placeholder:text-mute/60 focus:border-magenta focus:shadow-[0_0_0_3px_rgba(255,43,214,0.2)] disabled:opacity-60"
         />
         <div className="mt-3 flex flex-wrap gap-2">
           {EXAMPLES.map((ex) => (
             <button
               key={ex}
               type="button"
+              disabled={loading}
               onClick={() => {
                 setScene(ex);
                 void generate(ex);
               }}
-              className="rounded-full border border-stroke bg-panel-2 px-3 py-1 text-xs text-mute transition hover:border-lime hover:text-lime"
+              className="rounded-full border border-stroke bg-panel-2 px-3 py-1 text-xs text-mute transition hover:border-lime hover:text-lime disabled:opacity-50"
             >
               {ex}
             </button>
@@ -223,19 +219,19 @@ export default function Home() {
           onClick={() => void generate()}
           className="mt-4 w-full rounded-md border-2 border-magenta bg-magenta/15 py-3 font-body text-base font-bold text-magenta transition hover:bg-magenta hover:text-ink disabled:cursor-wait disabled:opacity-60"
         >
-          {loading ? "首字母不合则交回生成器……" : "翻译成 ky,zhyz"}
+          {loading ? "生成中…" : "翻译成 ky,zhyz"}
         </button>
-        {error && (
+        {error && !loading && (
           <p className="mt-3 rounded border border-warn/40 bg-warn/10 px-3 py-2 text-sm text-warn">
             {error}
           </p>
         )}
       </section>
 
-      {slots && (
+      {slots && !loading && (
         <section className="mt-6 overflow-hidden rounded-lg border border-stroke">
           <div className="border-b border-stroke bg-panel-2 px-4 py-2 font-mono text-[11px] text-mute">
-            首字母检验 · 红=不合 ky,zhyz（交回生成器）· 多音字任一读音命中即过
+            已过检 · 六格首字母均合 ky,zhyz（多音字任一读音命中）
           </div>
           <ul className="divide-y divide-stroke bg-panel">
             {slots.map((s) => (
@@ -244,23 +240,18 @@ export default function Home() {
                 className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3 text-sm"
               >
                 <span className="font-mono text-mute">#{s.index + 1}</span>
-                <span className="text-lg font-bold">{s.char || "∅"}</span>
+                <span className="text-lg font-bold">{s.char}</span>
                 <span className="font-mono text-xs text-mute">
-                  要 {s.expected}
+                  {s.expected}
                 </span>
                 <span className="font-mono text-xs text-text/80">
-                  [{s.initials.join(" · ") || "—"}]
+                  [{(s.bares ?? s.initials).join(" · ") || "—"}]
                 </span>
                 <span className="text-xs text-mute">
                   {s.readings.join(" / ")}
                 </span>
-                <span
-                  className={[
-                    "ml-auto font-display text-[10px]",
-                    s.pass ? "text-lime" : "text-warn",
-                  ].join(" ")}
-                >
-                  {s.pass ? "合" : "不合·交回"}
+                <span className="ml-auto font-display text-[10px] text-lime">
+                  合
                 </span>
               </li>
             ))}
@@ -274,7 +265,7 @@ export default function Home() {
           远程备份。人物词表 100 条见 /data/ky-zhyz-topics.json。
         </p>
         <p className="mt-1">
-          deepseek-chat · 无 reasoner · pinyin-pro 多音字全读音
+          deepseek-chat · 无 reasoner · 服务端静默重试至过检
         </p>
       </footer>
 

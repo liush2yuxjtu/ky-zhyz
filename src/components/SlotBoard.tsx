@@ -15,7 +15,7 @@ export function SlotBoard({ slots, filled }: Props) {
     <div className="w-full">
       <div className="mb-3 flex items-end justify-between gap-3">
         <p className="font-mono text-[11px] tracking-widest text-mute">
-          目标首字母 · k y · zh h y z（红=不合）
+          目标首字母 · k y · zh h y z
         </p>
         <p className="font-display text-[10px] leading-none text-magenta">
           ky,zhyz

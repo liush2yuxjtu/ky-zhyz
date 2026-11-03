@@ -7,23 +7,24 @@ import {
 
 const API_URL = "https://api.deepseek.com/chat/completions";
 const MODEL = "deepseek-chat";
-const MAX_ATTEMPTS = 5;
+export const MAX_ATTEMPTS = 5;
 
 export type GenerateOk = {
   ok: true;
   phrase: string;
   display: string;
   gloss: string;
+  /** Always a full PASS validation — never partial/fail slots. */
   validation: ValidationResult;
   attempts: number;
 };
 
+/**
+ * Exhausted retries. No failing phrase/slots — client must not render those.
+ */
 export type GenerateFail = {
   ok: false;
   error: string;
-  lastPhrase?: string;
-  lastGloss?: string;
-  validation?: ValidationResult;
   attempts: number;
 };
 
@@ -39,9 +40,9 @@ const SYSTEM = `你是「ky,zhyz」造句机。用户会描述一个场景/情�
 1. 只输出一个 JSON 对象，不要 markdown，不要解释，不要思考过程。
 2. 格式：{"phrase":"六个汉字","gloss":"一句话说明这六字怎么扣题"}
 3. phrase 必须恰好 6 个汉字，可含顿号/逗号但汉字必须正好 6 个。
-4. 第3字声母必须是 zh（这/震/长zhǎng…）；第6字声母可为 z 或 zh（种/洲/在…皆可，亚文化惯例）。
+4. 第3字必须以 zh 开头（这/震/长zhǎng…）；第6字以 z 开头即可（种zhong/洲zhou/在zai 皆可）。
 5. 尽量搞笑、抽象、贴吧味；扣住用户场景。
-6. 若收到「交回生成器」反馈，说明上一版某些字的拼音声母不合 ky,zhyz（不是注音标注错误），必须整句重写到六格全合。`;
+6. 若收到「交回生成器」反馈，说明上一版某些字首字母不合 ky,zhyz，必须整句重写到六格全合。`;
 
 function buildUser(scene: string, repair?: string): string {
   if (!repair) {
@@ -99,7 +100,8 @@ async function callDeepSeek(
   return { phrase, gloss, raw };
 }
 
-function describeFail(v: ValidationResult): string {
+/** Internal only — fed back to the model, never shown as the user-facing answer. */
+export function describeFail(v: ValidationResult): string {
   if (!v.lengthOk) {
     return `汉字数=${v.chars.length}（需要恰好6），得到「${v.chars.join("")}」。请重写。`;
   }
@@ -107,9 +109,8 @@ function describeFail(v: ValidationResult): string {
     .filter((s) => !s.pass)
     .map((s) => {
       const got =
-        ("bares" in s && Array.isArray((s as { bares?: string[] }).bares) && (s as { bares?: string[] }).bares!.length
-          ? (s as { bares: string[] }).bares.join("/")
-          : s.initials.join("/")) || "无读音";
+        (s.bares && s.bares.length ? s.bares.join("/") : s.initials.join("/")) ||
+        "无读音";
       return `第${s.index + 1}格「${s.char}」首字母不合 ky,zhyz：读音[${got}]，要求以[${s.expected}]开头（z 格：zhou/zhong 算过）`;
     });
   return (
@@ -118,21 +119,22 @@ function describeFail(v: ValidationResult): string {
   );
 }
 
+export const EXHAUSTED_ERROR =
+  "这波没凑齐 ky,zhyz，点一下再试一次就好。";
+
+/**
+ * Always validate. On fail, silently regenerate with failing-slot feedback
+ * until PASS or MAX_ATTEMPTS. Failures never return phrase/slots to the client.
+ */
 export async function generateKyZhyz(
   scene: string,
   apiKey: string,
 ): Promise<GenerateResult> {
   let repair: string | undefined;
-  let lastPhrase = "";
-  let lastGloss = "";
-  let lastValidation: ValidationResult | undefined;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const { phrase, gloss } = await callDeepSeek(apiKey, scene, repair);
-    lastPhrase = phrase;
-    lastGloss = gloss;
     const validation = validateKyZhyz(phrase);
-    lastValidation = validation;
 
     if (validation.pass) {
       return {
@@ -146,7 +148,6 @@ export async function generateKyZhyz(
     }
 
     repair = describeFail(validation);
-    // also nudge with extracted chars
     if (extractHanChars(phrase).length !== 6) {
       repair += "。必须恰好六个汉字。";
     }
@@ -154,10 +155,7 @@ export async function generateKyZhyz(
 
   return {
     ok: false,
-    error: "多次交回生成器后仍有格子首字母不合 ky,zhyz，换个场景再试。",
-    lastPhrase,
-    lastGloss,
-    validation: lastValidation,
+    error: EXHAUSTED_ERROR,
     attempts: MAX_ATTEMPTS,
   };
 }

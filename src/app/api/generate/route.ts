@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { generateKyZhyz } from "@/lib/deepseek";
-import { validateKyZhyz, formatDisplay } from "@/lib/validator";
 import { matchTopic, memeSrc } from "@/lib/topics";
 
 export const runtime = "nodejs";
 
 type Body = {
   scene?: string;
-  phrase?: string;
 };
 
 export async function POST(req: Request) {
@@ -16,31 +14,6 @@ export async function POST(req: Request) {
     body = (await req.json()) as Body;
   } catch {
     return NextResponse.json({ ok: false, error: "坏请求" }, { status: 400 });
-  }
-
-  const phraseOnly = typeof body.phrase === "string" ? body.phrase.trim() : "";
-  if (phraseOnly) {
-    const validation = validateKyZhyz(phraseOnly);
-    const match = matchTopic({ phrase: phraseOnly });
-    return NextResponse.json({
-      ok: validation.pass,
-      phrase: validation.chars.join(""),
-      display: formatDisplay(validation.chars),
-      gloss: "",
-      validation,
-      attempts: 0,
-      mode: "validate",
-      topic: {
-        id: match.topic.id,
-        name: match.topic.name,
-        note: match.topic.note,
-        phrase: match.topic.phrase,
-        matchedKeywords: match.matchedKeywords,
-        via: match.via,
-        score: match.score,
-        memeSrc: memeSrc(match.topic),
-      },
-    });
   }
 
   const scene = typeof body.scene === "string" ? body.scene.trim() : "";
@@ -67,36 +40,44 @@ export async function POST(req: Request) {
 
   try {
     const result = await generateKyZhyz(scene, apiKey);
+
+    if (!result.ok) {
+      // Friendly error only — no fail slots / lastPhrase as the answer
+      return NextResponse.json(
+        { ok: false, error: result.error, attempts: result.attempts },
+        { status: 422 },
+      );
+    }
+
     const match = matchTopic({
       scene,
-      phrase: result.ok
-        ? result.phrase
-        : result.lastPhrase,
-      gloss: result.ok ? result.gloss : result.lastGloss,
+      phrase: result.phrase,
+      gloss: result.gloss,
     });
-    const topicPayload = {
-      id: match.topic.id,
-      name: match.topic.name,
-      note: match.topic.note,
-      phrase: match.topic.phrase,
-      matchedKeywords: match.matchedKeywords,
-      via: match.via,
-      score: match.score,
-      memeSrc: memeSrc(match.topic),
-    };
 
-    if (result.ok) {
-      return NextResponse.json({ ...result, topic: topicPayload });
-    }
-    return NextResponse.json(
-      { ...result, topic: topicPayload },
-      { status: 422 },
-    );
+    return NextResponse.json({
+      ok: true,
+      phrase: result.phrase,
+      display: result.display,
+      gloss: result.gloss,
+      validation: result.validation,
+      attempts: result.attempts,
+      topic: {
+        id: match.topic.id,
+        name: match.topic.name,
+        note: match.topic.note,
+        phrase: match.topic.phrase,
+        matchedKeywords: match.matchedKeywords,
+        via: match.via,
+        score: match.score,
+        memeSrc: memeSrc(match.topic),
+      },
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : "生成失败";
     const safe = message.replace(/sk-[a-zA-Z0-9]+/g, "[redacted]");
     return NextResponse.json(
-      { ok: false, error: safe, attempts: 0 },
+      { ok: false, error: "生成出了点岔子，再试一次。", detail: safe, attempts: 0 },
       { status: 502 },
     );
   }
