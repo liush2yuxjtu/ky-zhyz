@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Press_Start_2P, Noto_Sans_SC, IBM_Plex_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const display = Press_Start_2P({
@@ -39,6 +41,8 @@ export default function RootLayout({
         className={`${display.variable} ${body.variable} ${mono.variable} antialiased`}
       >
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

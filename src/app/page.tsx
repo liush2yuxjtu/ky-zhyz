@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { track } from "@vercel/analytics";
 import { MemePop } from "@/components/MemePop";
 import { SlotBoard } from "@/components/SlotBoard";
 import type { CharVerdict, ValidationResult } from "@/lib/validator";
@@ -114,7 +115,7 @@ export default function Home() {
   }, []);
 
   const generate = useCallback(
-    async (override?: string) => {
+    async (override?: string, opts?: { fromExample?: boolean }) => {
       const text = (override ?? scene).trim();
       if (!text) {
         setError("先写一句你想吐的场景");
@@ -133,6 +134,10 @@ export default function Home() {
       setProgressN(0);
       setProgressMax(5);
 
+      track("generate_click", {
+        has_example: Boolean(opts?.fromExample),
+      });
+
       try {
         const res = await fetch("/api/generate", {
           method: "POST",
@@ -146,6 +151,9 @@ export default function Home() {
         const ct = res.headers.get("content-type") ?? "";
         if (ct.includes("application/json")) {
           const data = (await res.json()) as ApiFail;
+          track("generate_fail", {
+            attempts: typeof data.attempts === "number" ? data.attempts : 0,
+          });
           setError(data.error || "生成出了点岔子，再试一次。");
           return;
         }
@@ -156,6 +164,9 @@ export default function Home() {
         });
 
         if (data.ok && data.validation?.pass) {
+          track("generate_success", {
+            attempts: typeof data.attempts === "number" ? data.attempts : 0,
+          });
           setDisplay(data.display);
           setGloss(data.gloss);
           setSlots(data.validation.slots);
@@ -166,6 +177,12 @@ export default function Home() {
           }
           // Do NOT auto-open meme — show board first
         } else {
+          track("generate_fail", {
+            attempts:
+              typeof data.attempts === "number"
+                ? data.attempts
+                : undefined,
+          });
           setDisplay("");
           setGloss("");
           setSlots(undefined);
@@ -178,6 +195,7 @@ export default function Home() {
           );
         }
       } catch {
+        track("generate_fail", {});
         setDisplay("");
         setSlots(undefined);
         setError("网络挂了，再点一次");
@@ -227,14 +245,15 @@ export default function Home() {
           className="w-full resize-y rounded-md border border-stroke bg-ink px-3 py-3 font-body text-[15px] text-text outline-none placeholder:text-mute/60 focus:border-magenta focus:shadow-[0_0_0_3px_rgba(255,43,214,0.2)] disabled:opacity-60"
         />
         <div className="mt-3 flex flex-wrap gap-2">
-          {EXAMPLES.map((ex) => (
+          {EXAMPLES.map((ex, i) => (
             <button
               key={ex}
               type="button"
               disabled={loading}
               onClick={() => {
                 setScene(ex);
-                void generate(ex);
+                track("example_chip", { index: i });
+                void generate(ex, { fromExample: true });
               }}
               className="rounded-full border border-stroke bg-panel-2 px-3 py-1 text-xs text-mute transition hover:border-lime hover:text-lime disabled:opacity-50"
             >
@@ -281,7 +300,11 @@ export default function Home() {
               {display && (
                 <button
                   type="button"
-                  onClick={() => canMeme && setMemeOpen(true)}
+                  onClick={() => {
+                    if (!canMeme) return;
+                    track("meme_open", {});
+                    setMemeOpen(true);
+                  }}
                   className="mt-5 block w-full text-center font-body text-3xl font-black tracking-wide text-magenta transition hover:brightness-110 sm:text-4xl"
                   title={canMeme ? "点开梗图" : undefined}
                 >
@@ -295,7 +318,10 @@ export default function Home() {
                 <div className="mt-4 flex justify-center">
                   <button
                     type="button"
-                    onClick={() => setMemeOpen(true)}
+                    onClick={() => {
+                      track("meme_open", {});
+                      setMemeOpen(true);
+                    }}
                     className="rounded-full border border-lime/50 bg-lime/10 px-4 py-2 font-body text-sm font-bold text-lime transition hover:bg-lime hover:text-ink"
                   >
                     看梗图
