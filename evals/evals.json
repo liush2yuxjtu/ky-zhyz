@@ -1,0 +1,736 @@
+{
+  "skill_name": "kyzhyz-system",
+  "description": "Hillclimb the DeepSeek SYSTEM prompt in src/lib/deepseek.ts for ky,zhyz six-char generation + scene-first meme matching. Not a Grok Bot skill — same eval/grader/viewer shape as skill-creator.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "lebron-slam",
+      "prompt": "詹皇又甩锅还说队友不懂球",
+      "expected_output": "球星场景应命中 lebron；六字须可回指詹姆斯/甩锅；主题线索含 詹/皇/勒/布朗/湖人/甩；梗图期望: lebron",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [詹/皇/勒/布朗/湖人/甩] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match topic id is \"lebron\" (scene-first)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "詹",
+          "皇",
+          "勒",
+          "布朗",
+          "湖人",
+          "甩"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很.+种$"
+        ],
+        "expected_meme": "lebron"
+      }
+    },
+    {
+      "id": 2,
+      "name": "lebron-name",
+      "prompt": "詹姆斯今天关键关键又打铁",
+      "expected_output": "显式詹姆斯 → lebron；主题线索含 詹/铁/球/皇；梗图期望: lebron",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [詹/铁/球/皇] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match topic id is \"lebron\" (scene-first)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "詹",
+          "铁",
+          "球",
+          "皇"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "lebron"
+      }
+    },
+    {
+      "id": 3,
+      "name": "canyon-samus",
+      "prompt": "Canyon转会抱团被叫三慕斯",
+      "expected_output": "电竞三慕斯；主题线索含 慕/转/团/野/峡谷；梗图期望: canyon",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [慕/转/团/野/峡谷] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match topic id is \"canyon\" (scene-first)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "慕",
+          "转",
+          "团",
+          "野",
+          "峡谷"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "canyon"
+      }
+    },
+    {
+      "id": 4,
+      "name": "cxk-basketball",
+      "prompt": "蔡徐坤又被拿出来说篮球",
+      "expected_output": "坤坤场景勿误伤勒布朗；主题线索含 坤/蔡/球/鸡；梗图期望: caixukun",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [坤/蔡/球/鸡] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match topic id is \"caixukun\" (scene-first)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "坤",
+          "蔡",
+          "球",
+          "鸡"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "caixukun"
+      }
+    },
+    {
+      "id": 5,
+      "name": "lei-jun",
+      "prompt": "老板雷军发布会又 are you ok",
+      "expected_output": "雷军/小米相关 topic 或至少非 lebron；主题线索含 雷/军/米/发布；梗图期望: leijun",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [雷/军/米/发布] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match topic id is \"leijun\" (scene-first)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "雷",
+          "军",
+          "米",
+          "发布"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "leijun"
+      }
+    },
+    {
+      "id": 6,
+      "name": "paper-review",
+      "prompt": "论文被审稿人批到体无完肤",
+      "expected_output": "学术吐槽 → 无名人关键词则 fallback；主题线索含 论/稿/审/文/博/研；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [论/稿/审/文/博/研] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "论",
+          "稿",
+          "审",
+          "文",
+          "博",
+          "研"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$",
+          "^可以这很.+种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 7,
+      "name": "milk-tea",
+      "prompt": "排队半小时买奶茶还加错糖",
+      "expected_output": "日常消费；phrase 带野种也不得命中 lebron；主题线索含 奶/茶/糖/排/杯；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [奶/茶/糖/排/杯] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)",
+        "Poison guard: matching with phrase \"可以这很野种\" must NOT yield lebron via keyword pollution"
+      ],
+      "checks": {
+        "must_include_any": [
+          "奶",
+          "茶",
+          "糖",
+          "排",
+          "杯"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$",
+          "^可以这很.+种$"
+        ],
+        "expected_meme": "fallback",
+        "poison_phrase": "可以这很野种"
+      }
+    },
+    {
+      "id": 8,
+      "name": "kaoyan",
+      "prompt": "考研英语阅读又错一片",
+      "expected_output": "考研关键词应命中张雪峰；poison 野种不得改成 lebron；主题线索含 考/研/英/阅/题/分；梗图期望: zhangxuefeng",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [考/研/英/阅/题/分] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match topic id is \"zhangxuefeng\" (scene-first)",
+        "Poison guard: matching with phrase \"可以这很野种\" must NOT yield lebron via keyword pollution"
+      ],
+      "checks": {
+        "must_include_any": [
+          "考",
+          "研",
+          "英",
+          "阅",
+          "题",
+          "分"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$",
+          "^可以这很.+种$"
+        ],
+        "expected_meme": "zhangxuefeng",
+        "poison_phrase": "可以这很野种"
+      }
+    },
+    {
+      "id": 9,
+      "name": "monday-work",
+      "prompt": "周一上班被老板画饼",
+      "expected_output": "主题线索含 班/饼/老板/工/会/周一；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [班/饼/老板/工/会/周一] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)",
+        "Poison guard: matching with phrase \"可以这很野种\" must NOT yield lebron via keyword pollution"
+      ],
+      "checks": {
+        "must_include_any": [
+          "班",
+          "饼",
+          "老板",
+          "工",
+          "会",
+          "周一"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$",
+          "^可以这很.+种$"
+        ],
+        "expected_meme": "fallback",
+        "poison_phrase": "可以这很野种"
+      }
+    },
+    {
+      "id": 10,
+      "name": "overtime",
+      "prompt": "周五晚上还在加班改需求",
+      "expected_output": "主题线索含 加/班/需/改/工/周；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [加/班/需/改/工/周] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "加",
+          "班",
+          "需",
+          "改",
+          "工",
+          "周"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 11,
+      "name": "subway",
+      "prompt": "早高峰挤地铁差点没上去",
+      "expected_output": "主题线索含 地/铁/高峰/挤/车；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [地/铁/高峰/挤/车] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "地",
+          "铁",
+          "高峰",
+          "挤",
+          "车"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 12,
+      "name": "delivery",
+      "prompt": "外卖迟到一小时还洒了",
+      "expected_output": "主题线索含 外/卖/迟/洒/骑；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [外/卖/迟/洒/骑] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "外",
+          "卖",
+          "迟",
+          "洒",
+          "骑"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 13,
+      "name": "rent",
+      "prompt": "房东又要涨房租还不修水管",
+      "expected_output": "主题线索含 房/租/涨/管/房东；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [房/租/涨/管/房东] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "房",
+          "租",
+          "涨",
+          "管",
+          "房东"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 14,
+      "name": "gym",
+      "prompt": "办了健身卡却一次都没去",
+      "expected_output": "主题线索含 健/身/卡/练/肌；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [健/身/卡/练/肌] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "健",
+          "身",
+          "卡",
+          "练",
+          "肌"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 15,
+      "name": "game-rank",
+      "prompt": "排位连跪被队友骂菜",
+      "expected_output": "泛排位无具体选手 → fallback（除非命中泛电竞词且库里有）；主题线索含 排/位/跪/菜/队；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [排/位/跪/菜/队] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "排",
+          "位",
+          "跪",
+          "菜",
+          "队"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 16,
+      "name": "stock",
+      "prompt": "刚买的基金又跌停心态崩了",
+      "expected_output": "主题线索含 基/金/跌/股/亏；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [基/金/跌/股/亏] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "基",
+          "金",
+          "跌",
+          "股",
+          "亏"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 17,
+      "name": "hospital",
+      "prompt": "挂号排一天医生看两分钟",
+      "expected_output": "主题线索含 挂/号/医/病/院；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [挂/号/医/病/院] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "挂",
+          "号",
+          "医",
+          "病",
+          "院"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 18,
+      "name": "parent-call",
+      "prompt": "爸妈又催我什么时候结婚",
+      "expected_output": "主题线索含 婚/爸/妈/催/结；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [婚/爸/妈/催/结] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "婚",
+          "爸",
+          "妈",
+          "催",
+          "结"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 19,
+      "name": "interview",
+      "prompt": "面试官问你为什么离职我卡壳",
+      "expected_output": "主题线索含 面/试/离/职/卡；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [面/试/离/职/卡] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "面",
+          "试",
+          "离",
+          "职",
+          "卡"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 20,
+      "name": "bilibili",
+      "prompt": "视频刚发出去就被网暴了",
+      "expected_output": "主题线索含 视/频/网/暴/评；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [视/频/网/暴/评] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "视",
+          "频",
+          "网",
+          "暴",
+          "评"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 21,
+      "name": "cat-vet",
+      "prompt": "带猫看病花了半个月工资",
+      "expected_output": "主题线索含 猫/病/工/资/宠；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [猫/病/工/资/宠] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "猫",
+          "病",
+          "工",
+          "资",
+          "宠"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 22,
+      "name": "iphone-drop",
+      "prompt": "新手机第一天就摔碎屏了",
+      "expected_output": "主题线索含 手/机/屏/摔/碎；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [手/机/屏/摔/碎] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "手",
+          "机",
+          "屏",
+          "摔",
+          "碎"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 23,
+      "name": "diet",
+      "prompt": "减肥第三天深夜点炸鸡",
+      "expected_output": "主题线索含 减/肥/炸/鸡/夜；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [减/肥/炸/鸡/夜] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "减",
+          "肥",
+          "炸",
+          "鸡",
+          "夜"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 24,
+      "name": "poison-shell-meme",
+      "prompt": "随便聊聊天气",
+      "expected_output": "纯毒测：scene 无名人词 + 壳 phrase → 必须 fallback，绝非 lebron；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)",
+        "Poison guard: matching with phrase \"可以这很野种\" must NOT yield lebron via keyword pollution"
+      ],
+      "checks": {
+        "must_include_any": [],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback",
+        "poison_phrase": "可以这很野种"
+      }
+    },
+    {
+      "id": 25,
+      "name": "lbj-english",
+      "prompt": "lebron again blamed teammates",
+      "expected_output": "英文 lebron 关键词仍应命中；梗图期望: lebron",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match topic id is \"lebron\" (scene-first)"
+      ],
+      "checks": {
+        "must_include_any": [],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "lebron"
+      }
+    },
+    {
+      "id": 26,
+      "name": "hotpot",
+      "prompt": "火锅店等位两小时胃都空了",
+      "expected_output": "主题线索含 火/锅/等/位/胃；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [火/锅/等/位/胃] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "火",
+          "锅",
+          "等",
+          "位",
+          "胃"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 27,
+      "name": "deadline",
+      "prompt": "DDL前一晚才开始写周报",
+      "expected_output": "主题线索含 周/报/写/截/稿/DDL/ddl；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [周/报/写/截/稿/DDL/ddl] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "周",
+          "报",
+          "写",
+          "截",
+          "稿",
+          "DDL",
+          "ddl"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    },
+    {
+      "id": 28,
+      "name": "sleep",
+      "prompt": "失眠刷手机到四点还是睡不着",
+      "expected_output": "主题线索含 失/眠/睡/刷/夜；梗图期望: fallback",
+      "expectations": [
+        "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+        "One-shot path: attempts === 1",
+        "Theme uniqueness: phrase includes at least one of [失/眠/睡/刷/夜] so the scene is uniquely recoverable",
+        "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+        "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+      ],
+      "checks": {
+        "must_include_any": [
+          "失",
+          "眠",
+          "睡",
+          "刷",
+          "夜"
+        ],
+        "must_not_phrase_patterns": [
+          "^可以这很野种$"
+        ],
+        "expected_meme": "fallback"
+      }
+    }
+  ]
+}

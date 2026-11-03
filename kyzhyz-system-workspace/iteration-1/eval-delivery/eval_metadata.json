@@ -1,0 +1,13 @@
+{
+  "eval_id": 12,
+  "eval_name": "delivery",
+  "prompt": "外卖迟到一小时还洒了",
+  "expected_output": "主题线索含 外/卖/迟/洒/骑；梗图期望: fallback",
+  "assertions": [
+    "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+    "One-shot path: attempts === 1",
+    "Theme uniqueness: phrase includes at least one of [外/卖/迟/洒/骑] so the scene is uniquely recoverable",
+    "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+    "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+  ]
+}

@@ -1,0 +1,2 @@
+FAIL attempts=1
+error=这波没凑齐 ky,zhyz，点一下再试一次就好。

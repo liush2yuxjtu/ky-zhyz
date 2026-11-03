@@ -1,0 +1,14 @@
+{
+  "eval_id": 8,
+  "eval_name": "kaoyan",
+  "prompt": "考研英语阅读又错一片",
+  "expected_output": "考研关键词应命中张雪峰；poison 野种不得改成 lebron；主题线索含 考/研/英/阅/题/分；梗图期望: zhangxuefeng",
+  "assertions": [
+    "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+    "One-shot path: attempts === 1",
+    "Theme uniqueness: phrase includes at least one of [考/研/英/阅/题/分] so the scene is uniquely recoverable",
+    "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+    "Meme match topic id is \"zhangxuefeng\" (scene-first)",
+    "Poison guard: matching with phrase \"可以这很野种\" must NOT yield lebron via keyword pollution"
+  ]
+}

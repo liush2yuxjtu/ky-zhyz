@@ -1,0 +1,12 @@
+{
+  "eval_id": 25,
+  "eval_name": "lbj-english",
+  "prompt": "lebron again blamed teammates",
+  "expected_output": "英文 lebron 关键词仍应命中；梗图期望: lebron",
+  "assertions": [
+    "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+    "One-shot path: attempts === 1",
+    "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+    "Meme match topic id is \"lebron\" (scene-first)"
+  ]
+}

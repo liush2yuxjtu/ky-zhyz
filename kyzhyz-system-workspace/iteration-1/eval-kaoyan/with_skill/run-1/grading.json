@@ -1,0 +1,48 @@
+{
+  "expectations": [
+    {
+      "text": "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+      "passed": false,
+      "evidence": "generation failed (one-shot may miss pinyin): 这波没凑齐 ky,zhyz，点一下再试一次就好。"
+    },
+    {
+      "text": "One-shot path: attempts === 1",
+      "passed": true,
+      "evidence": "attempts=1, MAX_ATTEMPTS=1"
+    },
+    {
+      "text": "Theme uniqueness: phrase includes at least one of [考/研/英/阅/题/分] so the scene is uniquely recoverable",
+      "passed": false,
+      "evidence": "no phrase to check theme clues [考/研/英/阅/题/分]"
+    },
+    {
+      "text": "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+      "passed": false,
+      "evidence": "no successful phrase to check shell (这波没凑齐 ky,zhyz，点一下再试一次就好。)"
+    },
+    {
+      "text": "Meme match topic id is \"zhangxuefeng\" (scene-first)",
+      "passed": true,
+      "evidence": "scene: meme=zhangxuefeng; with_phrase: meme=zhangxuefeng"
+    },
+    {
+      "text": "Poison guard: matching with phrase \"可以这很野种\" must NOT yield lebron via keyword pollution",
+      "passed": true,
+      "evidence": "poison match: meme=zhangxuefeng; topic=zhangxuefeng via=keyword"
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 3,
+    "total": 6,
+    "pass_rate": 0.5
+  },
+  "timing": {
+    "total_duration_seconds": 0.945,
+    "executor_duration_seconds": 0.945
+  },
+  "eval_feedback": {
+    "overall": "Programmatic grader mapped expectation text → hard checks (pinyin, attempts, theme, shell, meme, poison).",
+    "suggestions": []
+  }
+}

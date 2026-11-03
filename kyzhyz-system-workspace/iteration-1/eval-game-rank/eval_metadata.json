@@ -1,0 +1,13 @@
+{
+  "eval_id": 15,
+  "eval_name": "game-rank",
+  "prompt": "排位连跪被队友骂菜",
+  "expected_output": "泛排位无具体选手 → fallback（除非命中泛电竞词且库里有）；主题线索含 排/位/跪/菜/队；梗图期望: fallback",
+  "assertions": [
+    "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+    "One-shot path: attempts === 1",
+    "Theme uniqueness: phrase includes at least one of [排/位/跪/菜/队] so the scene is uniquely recoverable",
+    "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+    "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "eval_id": 9,
+  "eval_name": "monday-work",
+  "prompt": "周一上班被老板画饼",
+  "expected_output": "主题线索含 班/饼/老板/工/会/周一；梗图期望: fallback",
+  "assertions": [
+    "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+    "One-shot path: attempts === 1",
+    "Theme uniqueness: phrase includes at least one of [班/饼/老板/工/会/周一] so the scene is uniquely recoverable",
+    "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+    "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)",
+    "Poison guard: matching with phrase \"可以这很野种\" must NOT yield lebron via keyword pollution"
+  ]
+}

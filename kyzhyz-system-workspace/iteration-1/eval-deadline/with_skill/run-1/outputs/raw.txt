@@ -1,0 +1,3 @@
+phrase=开夜这活要砸
+gloss=开夜赶周报，这活眼看要砸，扣准DDL前夜才动笔的慌
+attempts=1

@@ -1,0 +1,3 @@
+phrase=亏呀这狠冤哉
+gloss=亏钱啊这跌得真狠，只能喊冤
+attempts=1

@@ -1,0 +1,3 @@
+phrase=靠又詹皇怨卒
+gloss=又见詹皇把输球怪到队友小卒头上
+attempts=1

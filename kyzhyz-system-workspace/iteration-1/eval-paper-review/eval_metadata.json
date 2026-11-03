@@ -1,0 +1,13 @@
+{
+  "eval_id": 6,
+  "eval_name": "paper-review",
+  "prompt": "论文被审稿人批到体无完肤",
+  "expected_output": "学术吐槽 → 无名人关键词则 fallback；主题线索含 论/稿/审/文/博/研；梗图期望: fallback",
+  "assertions": [
+    "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+    "One-shot path: attempts === 1",
+    "Theme uniqueness: phrase includes at least one of [论/稿/审/文/博/研] so the scene is uniquely recoverable",
+    "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+    "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+  ]
+}

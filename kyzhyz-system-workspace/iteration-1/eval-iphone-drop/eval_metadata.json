@@ -1,0 +1,13 @@
+{
+  "eval_id": 22,
+  "eval_name": "iphone-drop",
+  "prompt": "新手机第一天就摔碎屏了",
+  "expected_output": "主题线索含 手/机/屏/摔/碎；梗图期望: fallback",
+  "assertions": [
+    "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+    "One-shot path: attempts === 1",
+    "Theme uniqueness: phrase includes at least one of [手/机/屏/摔/碎] so the scene is uniquely recoverable",
+    "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+    "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+  ]
+}

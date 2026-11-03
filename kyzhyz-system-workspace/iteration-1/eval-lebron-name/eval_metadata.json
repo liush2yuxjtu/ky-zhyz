@@ -1,0 +1,13 @@
+{
+  "eval_id": 2,
+  "eval_name": "lebron-name",
+  "prompt": "詹姆斯今天关键关键又打铁",
+  "expected_output": "显式詹姆斯 → lebron；主题线索含 詹/铁/球/皇；梗图期望: lebron",
+  "assertions": [
+    "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+    "One-shot path: attempts === 1",
+    "Theme uniqueness: phrase includes at least one of [詹/铁/球/皇] so the scene is uniquely recoverable",
+    "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+    "Meme match topic id is \"lebron\" (scene-first)"
+  ]
+}
