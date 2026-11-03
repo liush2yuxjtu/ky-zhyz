@@ -128,7 +128,7 @@ export default function Home() {
           setGloss(data.lastGloss ?? "");
           applyValidation(data.validation);
           setPassed(false);
-          setError(data.error || "没过校验");
+          setError(data.error || "仍有格子首字母不合 ky,zhyz");
         }
       } catch {
         setError("网络挂了，再点一次");
@@ -143,7 +143,7 @@ export default function Home() {
     <main className="relative mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 pb-16 pt-10 sm:px-6">
       <header className="mb-10">
         <p className="mb-3 font-mono text-[11px] text-mute">
-          NBA吧外溢 · 电竞二次绑定 · 声母硬校验 · 100人物词表触发
+          NBA吧外溢 · 电竞二次绑定 · 首字母硬卡 ky,zhyz · 100人物词表触发
         </p>
         <h1 className="font-display text-[22px] leading-relaxed text-text sm:text-[28px]">
           <span className="text-magenta">ky</span>
@@ -151,9 +151,9 @@ export default function Home() {
           <span className="text-lime">zhyz</span>
         </h1>
         <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-mute">
-          丢一句任何场景。DeepSeek 吐出六字；逐字注音器（含多音字）卡死
-          <span className="text-text"> k / y / zh / h / y / z </span>
-          。过检后按关键词命中人物主题弹真实表情包（不是随机 AI 图）。
+          丢一句任何场景。DeepSeek 吐六字；检验器只问一件事：每个字的
+          <span className="text-text">首字母是否落在 k / y / zh / h / y / z</span>
+          （多音字任一读音命中即可）。红格＝首字母不合，会交回生成器重写，不是「注音写错了」。全过才弹梗图。
         </p>
       </header>
 
@@ -182,7 +182,7 @@ export default function Home() {
         )}
         {attempts > 0 && (
           <p className="mt-1 text-center font-mono text-[10px] text-mute">
-            模型尝试 {attempts} 次 · 校验器说了算
+            交回生成器 {attempts} 次 · 首字母不合就重写
           </p>
         )}
       </section>
@@ -223,7 +223,7 @@ export default function Home() {
           onClick={() => void generate()}
           className="mt-4 w-full rounded-md border-2 border-magenta bg-magenta/15 py-3 font-body text-base font-bold text-magenta transition hover:bg-magenta hover:text-ink disabled:cursor-wait disabled:opacity-60"
         >
-          {loading ? "正在硬凹声母……" : "翻译成 ky,zhyz"}
+          {loading ? "首字母不合则交回生成器……" : "翻译成 ky,zhyz"}
         </button>
         {error && (
           <p className="mt-3 rounded border border-warn/40 bg-warn/10 px-3 py-2 text-sm text-warn">
@@ -235,7 +235,7 @@ export default function Home() {
       {slots && (
         <section className="mt-6 overflow-hidden rounded-lg border border-stroke">
           <div className="border-b border-stroke bg-panel-2 px-4 py-2 font-mono text-[11px] text-mute">
-            逐字注音检验器 · 多音字任一读音命中即 PASS
+            首字母检验 · 红=不合 ky,zhyz（交回生成器）· 多音字任一读音命中即过
           </div>
           <ul className="divide-y divide-stroke bg-panel">
             {slots.map((s) => (
@@ -260,7 +260,7 @@ export default function Home() {
                     s.pass ? "text-lime" : "text-warn",
                   ].join(" ")}
                 >
-                  {s.pass ? "PASS" : "FAIL"}
+                  {s.pass ? "合" : "不合·交回"}
                 </span>
               </li>
             ))}

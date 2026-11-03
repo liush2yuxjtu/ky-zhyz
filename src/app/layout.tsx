@@ -25,7 +25,7 @@ const mono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "ky,zhyz — 场景翻译机",
-  description: "丢一句场景，吐出可以这很野种六字。声母校验，懂的都懂。",
+  description: "丢一句场景，吐出可以这很野种六字。首字母必须合 ky,zhyz；不合就交回生成器。",
 };
 
 export default function RootLayout({

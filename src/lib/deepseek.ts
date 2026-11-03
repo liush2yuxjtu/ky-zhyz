@@ -40,13 +40,14 @@ const SYSTEM = `你是「ky,zhyz」造句机。用户会描述一个场景/情�
 2. 格式：{"phrase":"六个汉字","gloss":"一句话说明这六字怎么扣题"}
 3. phrase 必须恰好 6 个汉字，可含顿号/逗号但汉字必须正好 6 个。
 4. 第3字声母必须是 zh（这/震/长zhǎng…）；第6字声母可为 z 或 zh（种/洲/在…皆可，亚文化惯例）。
-5. 尽量搞笑、抽象、贴吧味；扣住用户场景。`;
+5. 尽量搞笑、抽象、贴吧味；扣住用户场景。
+6. 若收到「交回生成器」反馈，说明上一版某些字的拼音声母不合 ky,zhyz（不是注音标注错误），必须整句重写到六格全合。`;
 
 function buildUser(scene: string, repair?: string): string {
   if (!repair) {
     return `场景：${scene}\n请输出 JSON。`;
   }
-  return `场景：${scene}\n上一版不合格：${repair}\n请严格按 k/y/zh/h/y/z 重写 6 字 JSON。`;
+  return `场景：${scene}\n上一版有格子首字母不合 ky,zhyz，已交回生成器：${repair}\n请输出新的 6 字 JSON，务必凑齐 k/y/zh/h/y/z。`;
 }
 
 function parseModelContent(content: string): ModelJson {
@@ -100,15 +101,18 @@ async function callDeepSeek(
 
 function describeFail(v: ValidationResult): string {
   if (!v.lengthOk) {
-    return `汉字数=${v.chars.length}（需要6），得到「${v.chars.join("")}」`;
+    return `汉字数=${v.chars.length}（需要恰好6），得到「${v.chars.join("")}」。请重写。`;
   }
   const bad = v.slots
     .filter((s) => !s.pass)
-    .map(
-      (s) =>
-        `第${s.index + 1}字「${s.char}」声母[${s.initials.join(",") || "?"}]≠${s.expected}`,
-    );
-  return bad.join("；");
+    .map((s) => {
+      const got = s.initials.join("/") || "无声母";
+      return `第${s.index + 1}格「${s.char}」首字母不合 ky,zhyz：实得[${got}]，要求[${s.expected}]`;
+    });
+  return (
+    "以下格子首字母不合 ky,zhyz，请交回生成器重写整句（不要解释，只出新 JSON）：" +
+    bad.join("；")
+  );
 }
 
 export async function generateKyZhyz(
@@ -147,7 +151,7 @@ export async function generateKyZhyz(
 
   return {
     ok: false,
-    error: "模型多次未通过声母校验，换个场景再试，或自己手搓六个字。",
+    error: "多次交回生成器后仍有格子首字母不合 ky,zhyz，换个场景再试。",
     lastPhrase,
     lastGloss,
     validation: lastValidation,
