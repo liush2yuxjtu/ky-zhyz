@@ -6,6 +6,7 @@ import { KY_ZHYZ_INITIALS } from "@/lib/validator";
 const LABELS = ["k", "y", "zh", "h", "y", "z"] as const;
 
 type Props = {
+  /** Only pass confirmed PASS slots — never fail/red. */
   slots?: CharVerdict[];
   filled?: boolean;
 };
@@ -15,7 +16,7 @@ export function SlotBoard({ slots, filled }: Props) {
     <div className="w-full">
       <div className="mb-3 flex items-end justify-between gap-3">
         <p className="font-mono text-[11px] tracking-widest text-mute">
-          目标首字母 · k y · zh h y z
+          已过检 · k y · zh h y z
         </p>
         <p className="font-display text-[10px] leading-none text-magenta">
           ky,zhyz
@@ -25,7 +26,6 @@ export function SlotBoard({ slots, filled }: Props) {
         {LABELS.map((label, i) => {
           const slot = slots?.[i];
           const char = slot?.char ?? "";
-          const pass = slot?.pass;
           const show = Boolean(char);
           return (
             <div key={`${label}-${i}`} className="relative">
@@ -40,20 +40,14 @@ export function SlotBoard({ slots, filled }: Props) {
                   "relative flex aspect-square flex-col items-center justify-center rounded-md border-2 bg-panel-2",
                   show && filled ? "slot-fill" : "",
                   show
-                    ? pass
-                      ? "border-lime shadow-[0_0_18px_rgba(57,255,20,0.35)]"
-                      : "border-warn shadow-[0_0_14px_rgba(255,107,53,0.3)]"
+                    ? "border-lime shadow-[0_0_18px_rgba(57,255,20,0.35)]"
                     : "border-stroke border-dashed",
                 ].join(" ")}
               >
                 <span
                   className={[
                     "font-body text-3xl font-black sm:text-4xl",
-                    show
-                      ? pass
-                        ? "text-lime"
-                        : "text-warn"
-                      : "text-stroke",
+                    show ? "text-lime" : "text-stroke",
                   ].join(" ")}
                 >
                   {show ? char : "·"}
@@ -71,7 +65,6 @@ export function SlotBoard({ slots, filled }: Props) {
           );
         })}
       </div>
-      {/* keep KY_ZHYZ_INITIALS referenced for tree-shake safety in tests */}
       <span className="sr-only">{KY_ZHYZ_INITIALS.join(",")}</span>
     </div>
   );

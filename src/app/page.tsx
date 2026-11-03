@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MemePop } from "@/components/MemePop";
 import { SlotBoard } from "@/components/SlotBoard";
 import type { CharVerdict, ValidationResult } from "@/lib/validator";
@@ -71,18 +71,24 @@ export default function Home() {
   const [attempts, setAttempts] = useState(0);
   const [memeOpen, setMemeOpen] = useState(false);
   const [topicMatch, setTopicMatch] = useState<TopicMatch | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
 
   const generate = useCallback(
     async (override?: string) => {
       const text = (override ?? scene).trim();
       if (!text) {
         setError("先写一句你想吐的场景");
+        textareaRef.current?.focus();
         return;
       }
       setLoading(true);
       setError(null);
       setMemeOpen(false);
-      // Don't flash previous / failing answers while regenerating
+      // Clear previous PASS while looping — never flash fail slots
       setDisplay("");
       setGloss("");
       setSlots(undefined);
@@ -112,7 +118,6 @@ export default function Home() {
           );
           setMemeOpen(true);
         } else {
-          // Exhausted / error — friendly message only, no fail slots
           setDisplay("");
           setGloss("");
           setSlots(undefined);
@@ -133,54 +138,22 @@ export default function Home() {
     [scene],
   );
 
+  const showResult = Boolean(slots) && !loading;
+
   return (
-    <main className="relative mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 pb-16 pt-10 sm:px-6">
-      <header className="mb-10">
-        <p className="mb-3 font-mono text-[11px] text-mute">
-          NBA吧外溢 · 电竞二次绑定 · 首字母硬卡 ky,zhyz · 100人物词表触发
-        </p>
-        <h1 className="font-display text-[22px] leading-relaxed text-text sm:text-[28px]">
+    <main className="relative mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 pb-28 pt-6 sm:px-6 sm:pb-16 sm:pt-10">
+      <header className="mb-5 sm:mb-6">
+        <h1 className="font-display text-[20px] leading-none text-text sm:text-[26px]">
           <span className="text-magenta">ky</span>
           <span className="text-mute">,</span>
           <span className="text-lime">zhyz</span>
         </h1>
-        <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-mute">
-          丢一句任何场景。服务端用 DeepSeek 吐六字，并自动按
-          <span className="text-text"> k / y / zh / h / y / z </span>
-          检验；不合就静默交回重写。你只会看到最终过检的六字和梗图。
+        <p className="mt-2 text-[13px] leading-snug text-mute sm:text-sm">
+          丢场景 → 服务端静默凑齐六字 → 你只看到过检答案
         </p>
       </header>
 
-      <section className="mb-8 rounded-lg border border-stroke bg-panel/90 p-4 shadow-[inset_0_0_0_1px_rgba(255,43,214,0.08)] sm:p-6">
-        <SlotBoard slots={slots} filled={Boolean(slots)} />
-        {loading && (
-          <p className="mt-5 text-center font-mono text-sm text-magenta animate-pulse">
-            生成中…
-          </p>
-        )}
-        {!loading && display && (
-          <p className="mt-5 text-center font-body text-3xl font-black tracking-wide text-magenta sm:text-4xl">
-            {display}
-          </p>
-        )}
-        {!loading && gloss && (
-          <p className="mt-2 text-center text-sm text-mute">{gloss}</p>
-        )}
-        {!loading && topicMatch && (
-          <p className="mt-2 text-center font-mono text-[11px] text-lime/80">
-            主题 · {topicMatch.topic.name}
-            {topicMatch.via === "keyword"
-              ? ` · 词：${topicMatch.matchedKeywords.slice(0, 3).join("/")}`
-              : " · 兜底"}
-          </p>
-        )}
-        {!loading && attempts > 0 && display && (
-          <p className="mt-1 text-center font-mono text-[10px] text-mute">
-            已过检 · 内部尝试 {attempts} 次
-          </p>
-        )}
-      </section>
-
+      {/* 1) Input first — above the fold */}
       <section className="rounded-lg border border-stroke bg-panel p-4 sm:p-5">
         <label
           htmlFor="scene"
@@ -189,12 +162,14 @@ export default function Home() {
           场景输入
         </label>
         <textarea
+          ref={textareaRef}
           id="scene"
           value={scene}
           onChange={(e) => setScene(e.target.value)}
           rows={3}
           placeholder="例：排位遇到三慕斯开大还甩锅……"
           disabled={loading}
+          autoFocus
           className="w-full resize-y rounded-md border border-stroke bg-ink px-3 py-3 font-body text-[15px] text-text outline-none placeholder:text-mute/60 focus:border-magenta focus:shadow-[0_0_0_3px_rgba(255,43,214,0.2)] disabled:opacity-60"
         />
         <div className="mt-3 flex flex-wrap gap-2">
@@ -217,7 +192,7 @@ export default function Home() {
           type="button"
           disabled={loading}
           onClick={() => void generate()}
-          className="mt-4 w-full rounded-md border-2 border-magenta bg-magenta/15 py-3 font-body text-base font-bold text-magenta transition hover:bg-magenta hover:text-ink disabled:cursor-wait disabled:opacity-60"
+          className="mt-4 hidden w-full rounded-md border-2 border-magenta bg-magenta/15 py-3 font-body text-base font-bold text-magenta transition hover:bg-magenta hover:text-ink disabled:cursor-wait disabled:opacity-60 sm:block"
         >
           {loading ? "生成中…" : "翻译成 ky,zhyz"}
         </button>
@@ -228,7 +203,56 @@ export default function Home() {
         )}
       </section>
 
-      {slots && !loading && (
+      {/* Sticky CTA on mobile */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stroke bg-ink/95 p-3 backdrop-blur sm:hidden">
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => void generate()}
+          className="w-full rounded-md border-2 border-magenta bg-magenta/20 py-3 font-body text-base font-bold text-magenta disabled:cursor-wait disabled:opacity-60"
+        >
+          {loading ? "生成中…" : "翻译成 ky,zhyz"}
+        </button>
+      </div>
+
+      {/* 2) Result only after PASS (or compact loading) */}
+      {(loading || showResult) && (
+        <section className="mt-6 rounded-lg border border-stroke bg-panel/90 p-4 shadow-[inset_0_0_0_1px_rgba(255,43,214,0.08)] sm:p-6">
+          {loading && (
+            <p className="py-6 text-center font-mono text-sm text-magenta animate-pulse">
+              生成中…
+            </p>
+          )}
+          {showResult && (
+            <>
+              <SlotBoard slots={slots} filled />
+              {display && (
+                <p className="mt-5 text-center font-body text-3xl font-black tracking-wide text-magenta sm:text-4xl">
+                  {display}
+                </p>
+              )}
+              {gloss && (
+                <p className="mt-2 text-center text-sm text-mute">{gloss}</p>
+              )}
+              {topicMatch && (
+                <p className="mt-2 text-center font-mono text-[11px] text-lime/80">
+                  主题 · {topicMatch.topic.name}
+                  {topicMatch.via === "keyword"
+                    ? ` · 词：${topicMatch.matchedKeywords.slice(0, 3).join("/")}`
+                    : " · 兜底"}
+                </p>
+              )}
+              {attempts > 0 && (
+                <p className="mt-1 text-center font-mono text-[10px] text-mute">
+                  已过检 · 内部尝试 {attempts} 次
+                </p>
+              )}
+            </>
+          )}
+        </section>
+      )}
+
+      {showResult && slots && (
         <section className="mt-6 overflow-hidden rounded-lg border border-stroke">
           <div className="border-b border-stroke bg-panel-2 px-4 py-2 font-mono text-[11px] text-mute">
             已过检 · 六格首字母均合 ky,zhyz（多音字任一读音命中）
@@ -241,9 +265,7 @@ export default function Home() {
               >
                 <span className="font-mono text-mute">#{s.index + 1}</span>
                 <span className="text-lg font-bold">{s.char}</span>
-                <span className="font-mono text-xs text-mute">
-                  {s.expected}
-                </span>
+                <span className="font-mono text-xs text-mute">{s.expected}</span>
                 <span className="font-mono text-xs text-text/80">
                   [{(s.bares ?? s.initials).join(" · ") || "—"}]
                 </span>
@@ -259,7 +281,7 @@ export default function Home() {
         </section>
       )}
 
-      <footer className="mt-12 border-t border-stroke pt-6 font-mono text-[10px] leading-relaxed text-mute">
+      <footer className="mt-10 border-t border-stroke pt-5 font-mono text-[10px] leading-relaxed text-mute">
         <p>
           表情：MemeCrafters/meme-generator（MIT）本地包 + ChineseBQB
           远程备份。人物词表 100 条见 /data/ky-zhyz-topics.json。
