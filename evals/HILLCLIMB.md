@@ -58,3 +58,11 @@ Selected round: **iter5** (best judge with live ≈ R0). If live rate is preferr
 1. Re-run `EVAL_LIVE=1 EVAL_JUDGE=1 npm run eval:iteration` after any SYSTEM edit; compare `benchmark.md` + judge means in grading evidence.
 2. Consider enabling `KY_ZHYZ_MAX_ATTEMPTS=2` only in eval to measure ceiling vs one-shot.
 3. Tighten z-slot matching if product intent is “true z only, plus zhou/zhong whitelist” (today `bare.startsWith("z")` also accepts **zh*** syllables like 整/住).
+
+## Note (iteration-2 executor)
+
+Programmatic grader hillclimb **iteration-2** (bank anchors + check field + temp 0.25) measured:
+- mean expectation pass **92.1%** (vs iter1 72.7%)
+- full-pass **21/28**, one-shot pinyin FAIL **2** (vs 9)
+
+A later JUDGE-oriented “surgical” SYSTEM at temp 0.85 was briefly on main with reported live ~18/28; production restored to iteration-2 SYSTEM because hard-gate pass rate is the developer gate for one-shot pinyin.
