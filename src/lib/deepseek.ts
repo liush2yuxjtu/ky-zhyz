@@ -7,7 +7,12 @@ import {
 import { SYSTEM_PROMPT } from "./system-prompt";
 
 const API_URL = "https://api.deepseek.com/chat/completions";
-const MODEL = "deepseek-chat";
+/** Current DeepSeek catalog (2026-11): deepseek-flash / deepseek-v4-pro. deepseek-chat retired. */
+const MODEL = process.env.KY_ZHYZ_MODEL?.trim() || "deepseek-flash";
+const THINKING_ENABLED = process.env.KY_ZHYZ_THINKING !== "0";
+const REASONING_EFFORT = (
+  process.env.KY_ZHYZ_REASONING_EFFORT?.trim() || "low"
+).toLowerCase();
 
 /** Production default: one-shot. Override with KY_ZHYZ_MAX_ATTEMPTS for local experiments. */
 export const MAX_ATTEMPTS = Math.max(
@@ -223,46 +228,102 @@ async function callDeepSeek(
   avoid: string[],
   locks: LockMask,
   repair?: string,
-): Promise<{ phrase: string; gloss: string; raw: string }> {
+): Promise<{
+  phrase: string;
+  gloss: string;
+  raw: string;
+  reasoningContent: string;
+}> {
   const seed =
     typeof crypto !== "undefined" && "getRandomValues" in crypto
       ? crypto.getRandomValues(new Uint32Array(1))[0]! >>> 0
       : Math.floor(Math.random() * 1_000_000_000);
+  const body: Record<string, unknown> = {
+    model: MODEL,
+    // No-op in thinking mode (DeepSeek ignores these); kept for non-thinking fallback.
+    temperature: 1.15,
+    top_p: 0.92,
+    presence_penalty: 0.65,
+    frequency_penalty: 0.45,
+    seed,
+    // CoT + JSON share this cap; low effort still needs headroom so content is not truncated.
+    max_tokens: 2048,
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: SYSTEM },
+      { role: "user", content: buildUser(scene, avoid, locks, repair) },
+    ],
+  };
+  if (THINKING_ENABLED) {
+    body.thinking = { type: "enabled" };
+    body.reasoning_effort = REASONING_EFFORT;
+  }
   const res = await fetch(API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
-      model: MODEL,
-      temperature: 1.15,
-      top_p: 0.92,
-      presence_penalty: 0.65,
-      frequency_penalty: 0.45,
-      seed,
-      max_tokens: 200,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: SYSTEM },
-        { role: "user", content: buildUser(scene, avoid, locks, repair) },
-      ],
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`DeepSeek HTTP ${res.status}: ${text.slice(0, 200)}`);
+    throw new Error(`DeepSeek HTTP ${res.status}: ${text.slice(0, 400)}`);
   }
 
   const data = (await res.json()) as {
-    choices?: { message?: { content?: string } }[];
+    choices?: {
+      message?: { content?: string; reasoning_content?: string };
+    }[];
   };
-  const raw = data.choices?.[0]?.message?.content ?? "";
+  const message = data.choices?.[0]?.message;
+  const raw = message?.content ?? "";
+  const reasoningContent = String(message?.reasoning_content ?? "");
   const parsed = parseModelContent(raw);
   const phrase = String(parsed.phrase ?? "").trim();
   const gloss = String(parsed.gloss ?? "").trim();
-  return { phrase, gloss, raw };
+  return { phrase, gloss, raw, reasoningContent };
+}
+
+/** Local / eval probe only — not wired to the public API. */
+export async function probeDeepSeekOnce(
+  scene: string,
+  apiKey: string,
+  avoid: string[] = [],
+  locksInput: unknown = null,
+): Promise<{
+  phrase: string;
+  gloss: string;
+  display: string;
+  validation: ValidationResult;
+  reasoningContent: string;
+  raw: string;
+  model: string;
+  thinking: boolean;
+  reasoningEffort: string;
+}> {
+  const locks = sanitizeLocks(locksInput);
+  const { phrase, gloss, raw, reasoningContent } = await callDeepSeek(
+    apiKey,
+    scene,
+    sanitizeAvoid(avoid),
+    locks,
+  );
+  const validation = validateKyZhyz(phrase);
+  return {
+    phrase: validation.chars.join("") || phrase,
+    gloss,
+    display: validation.pass
+      ? formatDisplay(validation.chars)
+      : phrase,
+    validation,
+    reasoningContent,
+    raw,
+    model: MODEL,
+    thinking: THINKING_ENABLED,
+    reasoningEffort: REASONING_EFFORT,
+  };
 }
 
 /** Internal only — fed back to the model on multi-attempt experiments, never shown as the answer. */
