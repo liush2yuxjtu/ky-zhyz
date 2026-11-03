@@ -612,7 +612,7 @@ async function main() {
           topic_id: memeMatch.topic.id,
           via: memeMatch.via,
           expected: ev.checks.expected_meme,
-          src: memeMatch.topic.meme?.src ?? null,
+          src: (memeMatch.topic.meme as { src?: string } | undefined)?.src ?? null,
         },
         null,
         2,

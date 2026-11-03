@@ -36,6 +36,8 @@
     "data/**/*.json"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "evals",
+    "kyzhyz-system-workspace"
   ]
 }
