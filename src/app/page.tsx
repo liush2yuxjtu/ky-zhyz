@@ -105,6 +105,15 @@ export default function Home() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   /** Session phrases to push as avoid on re-generate (same or any scene). */
   const recentPhrasesRef = useRef<string[]>([]);
+  /** Per-slot lock; parallel to current PASS chars. */
+  const [lockedMask, setLockedMask] = useState<boolean[]>([
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+  ]);
 
   useEffect(() => {
     textareaRef.current?.focus();
@@ -121,12 +130,15 @@ export default function Home() {
       setLoading(true);
       setError(null);
       setMemeOpen(false);
-      setDisplay("");
-      setGloss("");
-      setSlots(undefined);
-      setMemeTitle("");
-      setMemeSrc("");
-      setMemeNote("");
+      // Keep current board while locked-regenerating so fail does not wipe locks.
+      if (!lockedMask.some(Boolean)) {
+        setDisplay("");
+        setGloss("");
+        setSlots(undefined);
+        setMemeTitle("");
+        setMemeSrc("");
+        setMemeNote("");
+      }
 
       track("generate_click", {
         has_example: Boolean(opts?.fromExample),
@@ -142,6 +154,9 @@ export default function Home() {
           body: JSON.stringify({
             scene: text,
             avoid: recentPhrasesRef.current.slice(-8),
+            locks: lockedMask.map((on, i) =>
+              on && slots?.[i]?.char ? slots[i]!.char : null,
+            ),
           }),
         });
 
@@ -182,12 +197,14 @@ export default function Home() {
             attempts:
               typeof data.attempts === "number" ? data.attempts : undefined,
           });
-          setDisplay("");
-          setGloss("");
-          setSlots(undefined);
-          setMemeTitle("");
-          setMemeSrc("");
-          setMemeNote("");
+          if (!lockedMask.some(Boolean)) {
+            setDisplay("");
+            setGloss("");
+            setSlots(undefined);
+            setMemeTitle("");
+            setMemeSrc("");
+            setMemeNote("");
+          }
           setError(
             (!data.ok && data.error) ||
               "这波没凑齐 ky,zhyz，点一下再试一次就好。",
@@ -195,17 +212,19 @@ export default function Home() {
         }
       } catch {
         track("generate_fail", {});
-        setDisplay("");
-        setSlots(undefined);
+        if (!lockedMask.some(Boolean)) {
+          setDisplay("");
+          setSlots(undefined);
+        }
         setError("网络挂了，再点一次");
       } finally {
         setLoading(false);
       }
     },
-    [scene],
+    [scene, lockedMask, slots],
   );
 
-  const showResult = Boolean(slots) && !loading;
+  const showResult = Boolean(slots);
   const canMeme = Boolean(memeSrc);
   const loadingLabel = "生成中…";
 
@@ -256,6 +275,7 @@ export default function Home() {
               aria-label={`用场景：${ex.scene}`}
               onClick={() => {
                 setScene(ex.scene);
+                setLockedMask([false, false, false, false, false, false]);
                 track("example_chip", { index: i, label: ex.label });
                 void generate(ex.scene, { fromExample: true });
               }}
@@ -271,7 +291,11 @@ export default function Home() {
           onClick={() => void generate()}
           className="mt-4 hidden w-full rounded-md border-2 border-magenta bg-magenta/15 py-3 font-body text-base font-bold text-magenta transition hover:bg-magenta hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta disabled:cursor-wait disabled:opacity-60 sm:block"
         >
-          {loading ? loadingLabel : "翻译成 ky,zhyz"}
+          {loading
+            ? loadingLabel
+            : lockedMask.some(Boolean)
+              ? "带着锁字再生成"
+              : "翻译成 ky,zhyz"}
         </button>
         {error && !loading && (
           <p className="mt-3 rounded border border-warn/40 bg-warn/10 px-3 py-2 text-sm text-warn">
@@ -287,7 +311,11 @@ export default function Home() {
           onClick={() => void generate()}
           className="w-full min-h-12 rounded-md border-2 border-magenta bg-magenta/20 py-3 font-body text-base font-bold text-magenta focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta disabled:cursor-wait disabled:opacity-60"
         >
-          {loading ? loadingLabel : "翻译成 ky,zhyz"}
+          {loading
+            ? loadingLabel
+            : lockedMask.some(Boolean)
+              ? "带着锁字再生成"
+              : "翻译成 ky,zhyz"}
         </button>
       </div>
 
@@ -299,14 +327,56 @@ export default function Home() {
 
       {(loading || showResult) && (
         <section aria-live="polite" aria-busy={loading} className="mt-6 rounded-lg border border-stroke bg-panel/90 p-4 sm:p-6">
-          {loading && (
+          {loading && !showResult && (
             <p className="py-6 text-center text-sm text-magenta motion-safe:animate-pulse">
               {loadingLabel}
             </p>
           )}
+          {loading && showResult && (
+            <p className="mb-3 text-center text-[13px] text-magenta motion-safe:animate-pulse">
+              {lockedMask.some(Boolean) ? "锁字重写中…" : loadingLabel}
+            </p>
+          )}
           {showResult && (
             <>
-              <SlotBoard slots={slots} filled />
+              <SlotBoard
+                slots={slots}
+                filled
+                locked={lockedMask}
+                lockDisabled={loading}
+                onToggleLock={(index) => {
+                  setLockedMask((prev) => {
+                    const next = [...prev];
+                    next[index] = !next[index];
+                    // cannot lock every slot
+                    if (next.every(Boolean)) {
+                      next[index] = false;
+                    }
+                    track("slot_lock_toggle", {
+                      index,
+                      locked: next[index] ? 1 : 0,
+                    });
+                    return next;
+                  });
+                }}
+              />
+              {lockedMask.some(Boolean) && (
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                  <p className="text-[12px] text-magenta">
+                    已锁 {lockedMask.filter(Boolean).length} 字，再生成会保留
+                  </p>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() =>
+                      setLockedMask([false, false, false, false, false, false])
+                    }
+                    className="text-[12px] text-mute underline-offset-2 hover:text-text hover:underline"
+                  >
+                    清除锁定
+                  </button>
+                </div>
+              )}
               {display && (
                 canMeme ? (
                   <button

@@ -1,4 +1,9 @@
-import { generateKyZhyz, MAX_ATTEMPTS, sanitizeAvoid } from "@/lib/deepseek";
+import {
+  generateKyZhyz,
+  MAX_ATTEMPTS,
+  sanitizeAvoid,
+  sanitizeLocks,
+} from "@/lib/deepseek";
 import { matchTopic, memeSrc } from "@/lib/topics";
 
 export const runtime = "nodejs";
@@ -7,6 +12,8 @@ type Body = {
   scene?: string;
   /** Recent PASS phrases to avoid repeating on re-click. */
   avoid?: unknown;
+  /** Locked slot chars: length-6 array / {index:char}. */
+  locks?: unknown;
 };
 
 function sseLine(obj: unknown): Uint8Array {
@@ -53,6 +60,7 @@ export async function POST(req: Request) {
         send({ type: "start", maxAttempts: MAX_ATTEMPTS });
 
         const avoid = sanitizeAvoid(body.avoid);
+        const locks = sanitizeLocks(body.locks);
         const result = await generateKyZhyz(
           scene,
           apiKey,
@@ -61,6 +69,7 @@ export async function POST(req: Request) {
             send({ type: "attempt", n: attempt, max: maxAttempts });
           },
           avoid,
+          locks,
         );
 
         if (!result.ok) {

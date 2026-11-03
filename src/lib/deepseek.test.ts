@@ -4,6 +4,8 @@ import {
   MAX_ATTEMPTS,
   describeFail,
   sanitizeAvoid,
+  sanitizeLocks,
+  locksSatisfied,
   type GenerateFail,
   type GenerateOk,
 } from "./deepseek";
@@ -65,5 +67,25 @@ describe("sanitizeAvoid", () => {
         null,
       ]),
     ).toEqual(["坑友这黑又栽", "狂野震撼亚洲"]);
+  });
+});
+
+describe("sanitizeLocks", () => {
+  it("keeps fitting slot chars and rejects all-six lock", () => {
+    const locks = sanitizeLocks({ 0: "苦", 1: "饮" });
+    expect(locks[0]).toBe("苦");
+    expect(locks[1]).toBe("饮");
+    expect(locks[2]).toBeNull();
+    expect(locksSatisfied(["苦", "饮", "这", "盒", "冤", "卒"], locks)).toBe(
+      true,
+    );
+    expect(locksSatisfied(["坑", "饮", "这", "盒", "冤", "卒"], locks)).toBe(
+      false,
+    );
+  });
+
+  it("drops chars that miss the slot initial", () => {
+    const locks = sanitizeLocks({ 0: "奶" }); // nai — not k
+    expect(locks[0]).toBeNull();
   });
 });
