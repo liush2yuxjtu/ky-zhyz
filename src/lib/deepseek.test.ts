@@ -3,6 +3,7 @@ import {
   EXHAUSTED_ERROR,
   MAX_ATTEMPTS,
   describeFail,
+  extractJsonObject,
   sanitizeAvoid,
   sanitizeLocks,
   locksSatisfied,
@@ -87,5 +88,39 @@ describe("sanitizeLocks", () => {
   it("drops chars that miss the slot initial", () => {
     const locks = sanitizeLocks({ 0: "奶" }); // nai — not k
     expect(locks[0]).toBeNull();
+  });
+});
+
+describe("extractJsonObject", () => {
+  it("parses bare JSON", () => {
+    expect(
+      extractJsonObject(
+        '{"phrase":"坑饮这喝冤种","gloss":"奶茶加错糖"}',
+      ),
+    ).toEqual({ phrase: "坑饮这喝冤种", gloss: "奶茶加错糖" });
+  });
+
+  it("extracts JSON after soft CoT and prefers phrase object", () => {
+    const raw = `主事件是网恋被骗。
+声母自检：k-y-zh-h-y-z。
+{"noise":true}
+最终：{"check":"k-y-zh-h-y-z","phrase":"哭冤装哄又栽","gloss":"网恋被骗装甜哄又栽"}`;
+    expect(extractJsonObject(raw)).toMatchObject({
+      phrase: "哭冤装哄又栽",
+      gloss: "网恋被骗装甜哄又栽",
+    });
+  });
+
+  it("reads fenced json blocks", () => {
+    const raw =
+      'think...\n```json\n{"phrase":"空又涨狠要砸","gloss":"房租又涨"}\n```';
+    expect(extractJsonObject(raw)).toEqual({
+      phrase: "空又涨狠要砸",
+      gloss: "房租又涨",
+    });
+  });
+
+  it("returns empty on garbage", () => {
+    expect(extractJsonObject("no json here")).toEqual({});
   });
 });

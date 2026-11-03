@@ -1,5 +1,5 @@
 /**
- * Local probe: DeepSeek thinking (low) on KY-ZHYZ scenes.
+ * Local probe: DeepSeek flash (thinking disabled by default; soft CoT in prompt).
  * Does not hit the public API route — imports probeDeepSeekOnce only.
  */
 import { existsSync, readFileSync } from "node:fs";

@@ -9,10 +9,16 @@ import { SYSTEM_PROMPT } from "./system-prompt";
 const API_URL = "https://api.deepseek.com/chat/completions";
 /** Current DeepSeek catalog (2026-11): deepseek-flash / deepseek-v4-pro. deepseek-chat retired. */
 const MODEL = process.env.KY_ZHYZ_MODEL?.trim() || "deepseek-flash";
-const THINKING_ENABLED = process.env.KY_ZHYZ_THINKING !== "0";
+/** Production default: API thinking OFF. Set KY_ZHYZ_THINKING=1 to enable. Omit defaults ON on DeepSeek — always send explicit type. */
+const THINKING_ENABLED = process.env.KY_ZHYZ_THINKING === "1";
 const REASONING_EFFORT = (
   process.env.KY_ZHYZ_REASONING_EFFORT?.trim() || "low"
 ).toLowerCase();
+/** Soft CoT + JSON share this cap (no API reasoning_content). */
+const MAX_TOKENS = Math.min(
+  2000,
+  Math.max(200, Number.parseInt(process.env.KY_ZHYZ_MAX_TOKENS ?? "600", 10) || 600),
+);
 
 /** Production default: one-shot. Override with KY_ZHYZ_MAX_ATTEMPTS for local experiments. */
 export const MAX_ATTEMPTS = Math.max(
@@ -205,21 +211,74 @@ function buildUser(
   locks: LockMask,
   repair?: string,
 ): string {
+  const schemaHint =
+    "先 step by step 短想（主事件→六格选字→默念 k-y-(z|zh)-h-y-z），再在末尾交最终 JSON：{\"phrase\":\"六个汉字\",\"gloss\":\"一句扣题\"}（可加 check）。";
   if (!repair) {
-    return `场景：${scene}\n${diversityHint(scene, avoid, locks)}\n一次性输出合格 JSON。先按六格选字（优先口播表+合法锚点），默念 k-y-(z|zh)-h-y-z，再交卷。不会重试。`;
+    return `场景：${scene}\n${diversityHint(scene, avoid, locks)}\n${schemaHint}不会重试，首发必须过声母。`;
   }
-  return `场景：${scene}\n${diversityHint(scene, avoid, locks)}\n上一版不可用，已交回生成器：${repair}\n请输出新的 6 字 JSON，务必凑齐 k/y/(z|zh)/h/y/z，守住锁定格，且勿撞避用整句。`;
+  return `场景：${scene}\n${diversityHint(scene, avoid, locks)}\n上一版不可用，已交回生成器：${repair}\n${schemaHint}务必凑齐 k/y/(z|zh)/h/y/z，守住锁定格，且勿撞避用整句。`;
+}
+
+/** Brace-match / fenced JSON extract — prefers object with phrase (+gloss). */
+export function extractJsonObject(content: string): ModelJson {
+  const trimmed = content.trim();
+  if (!trimmed) return {};
+
+  const candidates: string[] = [];
+  const fence = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence?.[1]) candidates.push(fence[1].trim());
+
+  // Collect balanced {...} slices (last wins if multiple)
+  for (let i = 0; i < trimmed.length; i++) {
+    if (trimmed[i] !== "{") continue;
+    let depth = 0;
+    let inStr = false;
+    let esc = false;
+    for (let j = i; j < trimmed.length; j++) {
+      const ch = trimmed[j]!;
+      if (inStr) {
+        if (esc) esc = false;
+        else if (ch === "\\") esc = true;
+        else if (ch === '"') inStr = false;
+        continue;
+      }
+      if (ch === '"') inStr = true;
+      else if (ch === "{") depth++;
+      else if (ch === "}") {
+        depth--;
+        if (depth === 0) {
+          candidates.push(trimmed.slice(i, j + 1));
+          break;
+        }
+      }
+    }
+  }
+
+  let best: ModelJson = {};
+  let bestScore = -1;
+  for (const raw of candidates) {
+    try {
+      const obj = JSON.parse(raw) as ModelJson;
+      if (!obj || typeof obj !== "object") continue;
+      const phrase = typeof obj.phrase === "string" ? obj.phrase.trim() : "";
+      const gloss = typeof obj.gloss === "string" ? obj.gloss.trim() : "";
+      let score = 0;
+      if (phrase) score += 2;
+      if (gloss) score += 1;
+      if (phrase.length >= 6) score += 1;
+      if (score > bestScore) {
+        bestScore = score;
+        best = obj;
+      }
+    } catch {
+      // try next candidate
+    }
+  }
+  return best;
 }
 
 function parseModelContent(content: string): ModelJson {
-  const trimmed = content.trim();
-  const fence = trimmed.match(/\{[\s\S]*\}/);
-  const raw = fence ? fence[0] : trimmed;
-  try {
-    return JSON.parse(raw) as ModelJson;
-  } catch {
-    return {};
-  }
+  return extractJsonObject(content);
 }
 
 async function callDeepSeek(
@@ -240,23 +299,25 @@ async function callDeepSeek(
       : Math.floor(Math.random() * 1_000_000_000);
   const body: Record<string, unknown> = {
     model: MODEL,
-    // No-op in thinking mode (DeepSeek ignores these); kept for non-thinking fallback.
     temperature: 1.15,
     top_p: 0.92,
     presence_penalty: 0.65,
     frequency_penalty: 0.45,
     seed,
-    // CoT + JSON share this cap; low effort still needs headroom so content is not truncated.
-    max_tokens: 2048,
-    response_format: { type: "json_object" },
+    // Soft CoT + final JSON in content — no API reasoning budget.
+    max_tokens: MAX_TOKENS,
+    // Free text so the model can think step-by-step; we extract JSON from the answer.
     messages: [
       { role: "system", content: SYSTEM },
       { role: "user", content: buildUser(scene, avoid, locks, repair) },
     ],
   };
+  // DeepSeek omit ⇒ thinking ON/high. Always send explicit type.
   if (THINKING_ENABLED) {
     body.thinking = { type: "enabled" };
     body.reasoning_effort = REASONING_EFFORT;
+  } else {
+    body.thinking = { type: "disabled" };
   }
   const res = await fetch(API_URL, {
     method: "POST",
