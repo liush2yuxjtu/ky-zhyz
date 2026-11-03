@@ -222,40 +222,42 @@ export default function Home() {
           id="scene"
           value={scene}
           onChange={(e) => setScene(e.target.value)}
+          onKeyDown={(e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+              e.preventDefault();
+              void generate();
+            }
+          }}
           rows={3}
           placeholder="排位连跪 / 奶茶加错糖 / …"
           disabled={loading}
           autoFocus
-          className="w-full resize-y rounded-md border border-stroke bg-ink px-3 py-3 font-body text-[15px] text-text outline-none placeholder:text-mute/60 focus:border-magenta focus:shadow-[0_0_0_3px_rgba(255,43,214,0.2)] disabled:opacity-60"
+          className="w-full resize-y rounded-md border border-stroke bg-ink px-3 py-3 font-body text-[15px] text-text outline-none placeholder:text-mute focus:border-magenta focus:shadow-[0_0_0_3px_rgba(255,43,214,0.2)] disabled:opacity-60"
         />
-        <div className="mt-3">
-          <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-mute/70">
-            试试
-          </p>
-          <div className="flex gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {EXAMPLES.map((ex, i) => (
-              <button
-                key={ex.label}
-                type="button"
-                disabled={loading}
-                title={ex.scene}
-                onClick={() => {
-                  setScene(ex.scene);
-                  track("example_chip", { index: i, label: ex.label });
-                  void generate(ex.scene, { fromExample: true });
-                }}
-                className="shrink-0 rounded border border-stroke bg-ink px-2.5 py-1 font-mono text-[12px] text-mute transition hover:border-lime hover:text-lime disabled:opacity-50"
-              >
-                {ex.label}
-              </button>
-            ))}
-          </div>
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {EXAMPLES.map((ex, i) => (
+            <button
+              key={ex.label}
+              type="button"
+              disabled={loading}
+              title={ex.scene}
+              aria-label={`用场景：${ex.scene}`}
+              onClick={() => {
+                setScene(ex.scene);
+                track("example_chip", { index: i, label: ex.label });
+                void generate(ex.scene, { fromExample: true });
+              }}
+              className="inline-flex min-h-11 shrink-0 items-center rounded border border-stroke bg-ink px-3 font-mono text-[13px] text-mute transition hover:border-lime hover:text-lime focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime disabled:opacity-50"
+            >
+              {ex.label}
+            </button>
+          ))}
         </div>
         <button
           type="button"
           disabled={loading}
           onClick={() => void generate()}
-          className="mt-4 hidden w-full rounded-md border-2 border-magenta bg-magenta/15 py-3 font-body text-base font-bold text-magenta transition hover:bg-magenta hover:text-ink disabled:cursor-wait disabled:opacity-60 sm:block"
+          className="mt-4 hidden w-full rounded-md border-2 border-magenta bg-magenta/15 py-3 font-body text-base font-bold text-magenta transition hover:bg-magenta hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta disabled:cursor-wait disabled:opacity-60 sm:block"
         >
           {loading ? loadingLabel : "翻译成 ky,zhyz"}
         </button>
@@ -271,7 +273,7 @@ export default function Home() {
           type="button"
           disabled={loading}
           onClick={() => void generate()}
-          className="w-full rounded-md border-2 border-magenta bg-magenta/20 py-3 font-body text-base font-bold text-magenta disabled:cursor-wait disabled:opacity-60"
+          className="w-full min-h-12 rounded-md border-2 border-magenta bg-magenta/20 py-3 font-body text-base font-bold text-magenta focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta disabled:cursor-wait disabled:opacity-60"
         >
           {loading ? loadingLabel : "翻译成 ky,zhyz"}
         </button>

@@ -3,7 +3,7 @@
 import type { CharVerdict } from "@/lib/validator";
 import { KY_ZHYZ_INITIALS } from "@/lib/validator";
 
-const LABELS = ["k", "y", "zh", "h", "y", "z"] as const;
+const LABELS = ["k", "y", "z/zh", "h", "y", "z"] as const;
 
 type Props = {
   /** Only pass confirmed PASS slots — never fail/red. */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 type Props = {
   open: boolean;
@@ -12,10 +12,20 @@ type Props = {
 };
 
 export function MemePop({ open, onClose, phrase, title, memeSrc, note }: Props) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (!open) return;
     const t = window.setTimeout(onClose, 3200);
-    return () => window.clearTimeout(t);
+    closeRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener("keydown", onKey);
+    };
   }, [open, onClose, phrase, title, memeSrc]);
 
   if (!open || !memeSrc) return null;
@@ -24,6 +34,7 @@ export function MemePop({ open, onClose, phrase, title, memeSrc, note }: Props) 
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
       role="dialog"
+      aria-modal="true"
       aria-label="梗图"
       onClick={onClose}
     >
@@ -49,9 +60,10 @@ export function MemePop({ open, onClose, phrase, title, memeSrc, note }: Props) 
           <p className="mt-1 text-center text-xs text-mute">{note}</p>
         ) : null}
         <button
+          ref={closeRef}
           type="button"
           onClick={onClose}
-          className="mt-3 w-full rounded border border-stroke bg-panel-2 py-2 font-mono text-xs text-mute hover:border-magenta hover:text-text"
+          className="mt-3 min-h-11 w-full rounded border border-stroke bg-panel-2 py-2 font-mono text-xs text-mute hover:border-magenta hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta"
         >
           关掉 · 继续野
         </button>
