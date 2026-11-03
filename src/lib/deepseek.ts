@@ -106,8 +106,11 @@ function describeFail(v: ValidationResult): string {
   const bad = v.slots
     .filter((s) => !s.pass)
     .map((s) => {
-      const got = s.initials.join("/") || "无声母";
-      return `第${s.index + 1}格「${s.char}」首字母不合 ky,zhyz：实得[${got}]，要求[${s.expected}]`;
+      const got =
+        ("bares" in s && Array.isArray((s as { bares?: string[] }).bares) && (s as { bares?: string[] }).bares!.length
+          ? (s as { bares: string[] }).bares.join("/")
+          : s.initials.join("/")) || "无读音";
+      return `第${s.index + 1}格「${s.char}」首字母不合 ky,zhyz：读音[${got}]，要求以[${s.expected}]开头（z 格：zhou/zhong 算过）`;
     });
   return (
     "以下格子首字母不合 ky,zhyz，请交回生成器重写整句（不要解释，只出新 JSON）：" +

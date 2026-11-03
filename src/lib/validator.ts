@@ -1,6 +1,6 @@
 import { pinyin } from "pinyin-pro";
 
-/** Target initials for ky,zhyz — 可以这很野种 / 狂野震撼亚洲 */
+/** Target slots for ky,zhyz — 可以这很野种 / 狂野震撼亚洲 */
 export const KY_ZHYZ_INITIALS = ["k", "y", "zh", "h", "y", "z"] as const;
 
 export type TargetInitial = (typeof KY_ZHYZ_INITIALS)[number];
@@ -9,11 +9,16 @@ export type CharVerdict = {
   char: string;
   index: number;
   expected: TargetInitial;
-  /** All distinct initials from every reading (tone-stripped, lowercased). */
+  /** All distinct Mandarin initials (for UI). */
   initials: string[];
   /** Full pinyin readings (with tone marks) for UI. */
   readings: string[];
+  /** Tone-stripped bare syllables used for matching. */
+  bares: string[];
   pass: boolean;
+  /** Which bare syllable satisfied the slot, if any. */
+  matchedBare: string | null;
+  /** @deprecated alias of matchedBare for older UI; prefer matchedBare */
   matchedInitial: string | null;
 };
 
@@ -32,28 +37,45 @@ export function extractHanChars(text: string): string[] {
   return text.match(HAN_RE) ?? [];
 }
 
-/** Normalize a pinyin-pro initial: lowercase, letters only. */
-export function normalizeInitial(raw: string): string {
+/** Lowercase letters only (strip tones / punctuation). */
+export function bareSyllable(raw: string): string {
   return raw.toLowerCase().replace(/[^a-z]/g, "");
 }
 
+/** Normalize a pinyin-pro initial: lowercase, letters only. */
+export function normalizeInitial(raw: string): string {
+  return bareSyllable(raw);
+}
+
 /**
- * Slot match rule:
- * - expected digraph (zh): initial must equal zh
- * - expected single letter (k/y/h/z): first letter of initial must match
- *   so 种/洲 (zh) still pass the final "z" slot (meme convention)
+ * Slot match on a tone-stripped syllable (or an initial string).
+ *
+ * - need `zh` (3rd slot): bare must start with digraph `zh` (zhen/zhe/zhou…)
+ * - need single letter incl. `z` (6th): bare must start with that letter
+ *   → `zhou` / `zhong` PASS the final z slot (they start with z)
+ *
+ * Never do `initial === 'z'` after extracting Mandarin initial `zh` —
+ * that falsely fails 洲/zhou.
  */
+export function syllableMatchesNeed(
+  bareOrInitial: string,
+  need: TargetInitial,
+): boolean {
+  const bare = bareSyllable(bareOrInitial);
+  if (!bare) return false;
+  if (need === "zh") return bare.startsWith("zh");
+  return bare.startsWith(need);
+}
+
+/** @deprecated use syllableMatchesNeed */
 export function initialMatches(
   actual: string,
   expected: TargetInitial,
 ): boolean {
-  const a = normalizeInitial(actual);
-  if (!a) return false;
-  if (expected.length > 1) return a === expected;
-  return a.charAt(0) === expected;
+  return syllableMatchesNeed(actual, expected);
 }
 
-/** All pronunciations for one character (多音字). */
+/** All pronunciations for one character (多音字), with tone marks. */
 export function readingsForChar(char: string): string[] {
   const multi = pinyin(char, {
     multiple: true,
@@ -65,7 +87,18 @@ export function readingsForChar(char: string): string[] {
   return uniq.length ? uniq : [pinyin(char, { toneType: "symbol" })];
 }
 
-/** All initials across every reading. */
+/** Tone-less bare syllables for every reading. */
+export function baresForChar(char: string): string[] {
+  const syl = pinyin(char, {
+    multiple: true,
+    type: "array",
+    toneType: "none",
+  }) as string[];
+  const arr = Array.isArray(syl) ? syl : [String(syl)];
+  return [...new Set(arr.map(bareSyllable).filter(Boolean))];
+}
+
+/** All initials across every reading (UI only). */
 export function initialsForChar(char: string): string[] {
   const direct = pinyin(char, {
     pattern: "initial",
@@ -79,16 +112,8 @@ export function initialsForChar(char: string): string[] {
   ];
 
   if (!normalized.length) {
-    const syl = pinyin(char, {
-      multiple: true,
-      type: "array",
-      toneType: "none",
-    }) as string[];
-    const arr = Array.isArray(syl) ? syl : [String(syl)];
-    for (const s of arr) {
-      const m = s
-        .toLowerCase()
-        .match(/^(zh|ch|sh|[bpmfdtnlgkhjqxrzcsyw])/);
+    for (const s of baresForChar(char)) {
+      const m = s.match(/^(zh|ch|sh|[bpmfdtnlgkhjqxrzcsyw])/);
       if (m) normalized.push(m[1]);
     }
   }
@@ -110,28 +135,44 @@ export function validateKyZhyz(phrase: string): ValidationResult {
         expected,
         initials: [],
         readings: [],
+        bares: [],
         pass: false,
+        matchedBare: null,
         matchedInitial: null,
       });
       continue;
     }
     const readings = readingsForChar(char);
+    const bares = baresForChar(char);
     const initials = initialsForChar(char);
-    let matchedInitial: string | null = null;
-    for (const init of initials) {
-      if (initialMatches(init, expected)) {
-        matchedInitial = normalizeInitial(init);
+
+    // Match against bare syllables first (zhou/zhong → z), then initials.
+    let matchedBare: string | null = null;
+    for (const bare of bares) {
+      if (syllableMatchesNeed(bare, expected)) {
+        matchedBare = bare;
         break;
       }
     }
+    if (!matchedBare) {
+      for (const init of initials) {
+        if (syllableMatchesNeed(init, expected)) {
+          matchedBare = init;
+          break;
+        }
+      }
+    }
+
     slots.push({
       char,
       index: i,
       expected,
       initials,
       readings,
-      pass: matchedInitial !== null,
-      matchedInitial,
+      bares,
+      pass: matchedBare !== null,
+      matchedBare,
+      matchedInitial: matchedBare,
     });
   }
 
