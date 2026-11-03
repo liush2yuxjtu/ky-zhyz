@@ -31,6 +31,7 @@ if (!apiKey) {
   console.error("missing DEEPSEEK_API_KEY");
   process.exit(1);
 }
+const key: string = apiKey;
 
 const scenes = process.argv.slice(2).length
   ? process.argv.slice(2)
@@ -43,7 +44,7 @@ const scenes = process.argv.slice(2).length
 async function main() {
   for (const scene of scenes) {
     const t0 = Date.now();
-    const r = await probeDeepSeekOnce(scene, apiKey);
+    const r = await probeDeepSeekOnce(scene, key);
     const ms = Date.now() - t0;
     console.log(
       JSON.stringify(
