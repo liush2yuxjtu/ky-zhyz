@@ -46,10 +46,7 @@ const EXAMPLES = [
   "论文被审稿人批到体无完肤",
 ];
 
-async function readGenerateStream(
-  res: Response,
-  onAttempt: (n: number, max: number) => void,
-): Promise<ApiOk | ApiFail> {
+async function readGenerateStream(res: Response): Promise<ApiOk | ApiFail> {
   if (!res.body) {
     return { ok: false, error: "网络挂了，再点一次" };
   }
@@ -81,13 +78,10 @@ async function readGenerateStream(
       } catch {
         continue;
       }
-      if (evt.type === "attempt") {
-        onAttempt(evt.n, evt.max);
-      } else if (evt.type === "start") {
-        onAttempt(0, evt.maxAttempts);
-      } else if (evt.type === "result") {
+      if (evt.type === "result") {
         final = evt;
       }
+      // ignore start/attempt — one-shot UX, no「第 N 次」
     }
   }
 
@@ -98,8 +92,6 @@ async function readGenerateStream(
 export default function Home() {
   const [scene, setScene] = useState("");
   const [loading, setLoading] = useState(false);
-  const [progressN, setProgressN] = useState(0);
-  const [progressMax, setProgressMax] = useState(5);
   const [error, setError] = useState<string | null>(null);
   const [display, setDisplay] = useState("");
   const [gloss, setGloss] = useState("");
@@ -131,8 +123,6 @@ export default function Home() {
       setMemeTitle("");
       setMemeSrc("");
       setMemeNote("");
-      setProgressN(0);
-      setProgressMax(5);
 
       track("generate_click", {
         has_example: Boolean(opts?.fromExample),
@@ -158,10 +148,7 @@ export default function Home() {
           return;
         }
 
-        const data = await readGenerateStream(res, (n, max) => {
-          setProgressN(n);
-          setProgressMax(max);
-        });
+        const data = await readGenerateStream(res);
 
         if (data.ok && data.validation?.pass) {
           track("generate_success", {
@@ -179,9 +166,7 @@ export default function Home() {
         } else {
           track("generate_fail", {
             attempts:
-              typeof data.attempts === "number"
-                ? data.attempts
-                : undefined,
+              typeof data.attempts === "number" ? data.attempts : undefined,
           });
           setDisplay("");
           setGloss("");
@@ -208,10 +193,7 @@ export default function Home() {
 
   const showResult = Boolean(slots) && !loading;
   const canMeme = Boolean(memeSrc);
-  const loadingLabel =
-    progressN > 0
-      ? `生成中… 第 ${progressN} 次`
-      : `服务端静默凑齐中（最多 ${progressMax} 次）`;
+  const loadingLabel = "生成中…";
 
   return (
     <main className="relative mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 pb-28 pt-6 sm:px-6 sm:pb-16 sm:pt-10">
