@@ -6,7 +6,15 @@ const SHARER_ID_LS = "ky-zhyz-sharer-id";
 const FROM_SHARE_SS = "ky-zhyz-from-share";
 const INVITE_FIRED_SS = "ky-zhyz-invite-land-fired";
 
-export type ShareChannel = "copy" | "native" | "card";
+/** Share mediums for utm_medium + analytics channel. */
+export type ShareChannel =
+  | "copy"
+  | "native"
+  | "card"
+  | "wechat"
+  | "moments"
+  | "weibo"
+  | "xhs";
 
 export type InviteLanding = {
   sharer_id: string;
@@ -41,12 +49,77 @@ export function getOrCreateSharerId(): string {
   }
 }
 
-export function buildShareUrl(channel: ShareChannel, sharerId: string): string {
+export function buildShareUrl(medium: ShareChannel, sharerId: string): string {
   const u = new URL(SITE_URL);
   u.searchParams.set("utm_source", "share");
-  u.searchParams.set("utm_medium", channel);
+  u.searchParams.set("utm_medium", medium);
   u.searchParams.set("sharer_id", sharerId);
   return u.toString();
+}
+
+/** Detect WeChat in-app browser (no JS-SDK; prefer copy + save image). */
+export function isWeChatUA(
+  ua: string = typeof navigator !== "undefined" ? navigator.userAgent : "",
+): boolean {
+  return /MicroMessenger/i.test(ua);
+}
+
+/**
+ * 网感口令文案 for WeChat paste / Weibo title / Moments caption.
+ * Weibo keeps it short; WeChat includes CTA + full attributed URL.
+ */
+export function buildShareCopy(opts: {
+  display: string;
+  gloss: string;
+  url: string;
+  platform: ShareChannel;
+}): string {
+  const phrase = opts.display.trim() || "ky,zhyz";
+  const gloss = opts.gloss.trim();
+
+  if (opts.platform === "weibo") {
+    const shortGloss =
+      gloss.length > 28 ? `${gloss.slice(0, 27)}…` : gloss;
+    return shortGloss
+      ? `「${phrase}」${shortGloss}｜ky,zhyz`
+      : `「${phrase}」｜来 ky,zhyz 测场面`;
+  }
+
+  if (opts.platform === "moments" || opts.platform === "xhs") {
+    return gloss
+      ? `「${phrase}」${gloss}\n扫码或点链接 → ${SITE_HOST}`
+      : `「${phrase}」\n扫码测场面 → ${SITE_HOST}`;
+  }
+
+  // wechat / copy / native / card — paste-friendly 口令
+  const lines = [`「${phrase}」`];
+  if (gloss) lines.push(gloss);
+  lines.push("");
+  lines.push("来 ky,zhyz 测测你的场面↓");
+  lines.push(opts.url);
+  return lines.join("\n");
+}
+
+/** Weibo web share intent (open in new tab). */
+export function buildWeiboShareUrl(opts: {
+  url: string;
+  title: string;
+}): string {
+  const u = new URL("https://service.weibo.com/share/share.php");
+  u.searchParams.set("url", opts.url);
+  u.searchParams.set("title", opts.title);
+  return u.toString();
+}
+
+/** Sanitize six-char display into a download filename stem. */
+export function shareCardFilename(display: string): string {
+  const raw = display
+    .replace(/，/g, "")
+    .replace(/[^\w\u4e00-\u9fff-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 24);
+  return `ky-zhyz-${raw || "share"}.png`;
 }
 
 /** Detect share/UTM landing; returns null when not a share visit. */
@@ -124,8 +197,8 @@ export function consumeFromShare(): FromShareState | null {
 }
 
 /**
- * Draw a shareable PNG card: six chars + gloss + brand URL watermark.
- * Returns a Blob (image/png).
+ * Draw a shareable PNG card: six chars + gloss + brand + QR (attributed URL).
+ * 1080×1350 (4:5) for Moments / 小红书. Returns image/png Blob.
  */
 export async function renderShareCardPng(opts: {
   display: string;
@@ -134,6 +207,10 @@ export async function renderShareCardPng(opts: {
 }): Promise<Blob> {
   const W = 1080;
   const H = 1350;
+  // WeChat Moments crop-safe margins
+  const pad = 72;
+  const bottomBar = 220;
+
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
@@ -152,60 +229,105 @@ export async function renderShareCardPng(opts: {
   ctx.fillRect(0, 0, W, H);
 
   // Panel
-  const pad = 64;
+  const panelTop = pad + 24;
+  const panelH = H - panelTop - bottomBar - 24;
   ctx.fillStyle = "#0c0c12";
-  roundRect(ctx, pad, pad + 40, W - pad * 2, H - pad * 2 - 120, 28);
+  roundRect(ctx, pad, panelTop, W - pad * 2, panelH, 28);
   ctx.fill();
   ctx.strokeStyle = "#2a2a3a";
   ctx.lineWidth = 4;
-  roundRect(ctx, pad, pad + 40, W - pad * 2, H - pad * 2 - 120, 28);
+  roundRect(ctx, pad, panelTop, W - pad * 2, panelH, 28);
   ctx.stroke();
 
   // Brand header
   ctx.textAlign = "center";
   ctx.font = "700 36px 'Noto Sans SC', 'PingFang SC', sans-serif";
   ctx.fillStyle = "#ff2bd6";
-  ctx.fillText("ky", W / 2 - 70, pad + 120);
+  ctx.fillText("ky", W / 2 - 70, panelTop + 72);
   ctx.fillStyle = "#8b8b9e";
-  ctx.fillText(",", W / 2 - 18, pad + 120);
+  ctx.fillText(",", W / 2 - 18, panelTop + 72);
   ctx.fillStyle = "#39ff14";
-  ctx.fillText("zhyz", W / 2 + 70, pad + 120);
+  ctx.fillText("zhyz", W / 2 + 70, panelTop + 72);
 
-  // Six-char display (strip commas for big glyph row if present)
+  // Six-char display
   const phrase = opts.display.replace(/，/g, "").trim() || opts.display;
   ctx.fillStyle = "#ff2bd6";
-  ctx.font = "900 96px 'Noto Sans SC', 'PingFang SC', sans-serif";
-  // Fit text
-  let size = 96;
-  while (size > 48 && ctx.measureText(phrase).width > W - pad * 2 - 80) {
+  ctx.font = "900 104px 'Noto Sans SC', 'PingFang SC', sans-serif";
+  let size = 104;
+  while (size > 52 && ctx.measureText(phrase).width > W - pad * 2 - 96) {
     size -= 4;
     ctx.font = `900 ${size}px 'Noto Sans SC', 'PingFang SC', sans-serif`;
   }
-  ctx.fillText(phrase, W / 2, H / 2 - 40);
+  const phraseY = panelTop + panelH * 0.42;
+  ctx.fillText(phrase, W / 2, phraseY);
 
   // Gloss
   if (opts.gloss) {
     ctx.fillStyle = "#8b8b9e";
     ctx.font = "500 36px 'Noto Sans SC', 'PingFang SC', sans-serif";
-    wrapText(ctx, opts.gloss, W / 2, H / 2 + 80, W - pad * 2 - 100, 48, 4);
+    wrapText(
+      ctx,
+      opts.gloss,
+      W / 2,
+      phraseY + 72,
+      W - pad * 2 - 100,
+      48,
+      4,
+    );
   }
 
-  // Watermark bar (Nikita: most-screenshotted area has brand+URL)
-  ctx.fillStyle = "rgba(18,18,28,0.95)";
-  ctx.fillRect(0, H - 140, W, 140);
+  // Bottom watermark bar with QR
+  ctx.fillStyle = "rgba(18,18,28,0.97)";
+  ctx.fillRect(0, H - bottomBar, W, bottomBar);
+
+  const qrSize = 148;
+  const qrPad = 10;
+  const qrBox = qrSize + qrPad * 2;
+  const qrX = W - pad - qrBox;
+  const qrY = H - bottomBar + (bottomBar - qrBox) / 2;
+
+  // QR white plate
+  ctx.fillStyle = "#ffffff";
+  roundRect(ctx, qrX, qrY, qrBox, qrBox, 12);
+  ctx.fill();
+
+  try {
+    const QRCode = (await import("qrcode")).default;
+    const qrCanvas = document.createElement("canvas");
+    await QRCode.toCanvas(qrCanvas, opts.shareUrl, {
+      errorCorrectionLevel: "M",
+      margin: 1,
+      width: qrSize,
+      color: { dark: "#050508", light: "#ffffff" },
+    });
+    ctx.drawImage(qrCanvas, qrX + qrPad, qrY + qrPad, qrSize, qrSize);
+  } catch {
+    // Fallback mark if qrcode fails — still ship brand bar
+    ctx.fillStyle = "#050508";
+    ctx.font = "700 22px ui-monospace, monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("QR", qrX + qrBox / 2, qrY + qrBox / 2 + 8);
+  }
+
+  // Brand + host left of QR
+  ctx.textAlign = "left";
+  const textLeft = pad;
+  const textMax = qrX - pad - 16;
   ctx.fillStyle = "#39ff14";
-  ctx.font = "700 32px 'Noto Sans SC', 'PingFang SC', sans-serif";
-  ctx.fillText("ky,zhyz", W / 2, H - 78);
+  ctx.font = "700 34px 'Noto Sans SC', 'PingFang SC', sans-serif";
+  ctx.fillText("ky,zhyz", textLeft, H - bottomBar + 72);
   ctx.fillStyle = "#f2f2f7";
   ctx.font = "500 28px 'IBM Plex Mono', ui-monospace, monospace";
-  ctx.fillText(SITE_HOST, W / 2, H - 36);
-
-  // Tiny URL for scanners / long-press
+  ctx.fillText(SITE_HOST, textLeft, H - bottomBar + 118);
   ctx.fillStyle = "#8b8b9e";
-  ctx.font = "400 18px ui-monospace, monospace";
-  const shortUrl =
-    opts.shareUrl.length > 64 ? SITE_URL : opts.shareUrl;
-  ctx.fillText(shortUrl, W / 2, H - 10);
+  ctx.font = "400 24px 'Noto Sans SC', 'PingFang SC', sans-serif";
+  const cta = "扫码测场面 · 声母六字";
+  // Truncate CTA if needed
+  let ctaDraw = cta;
+  while (ctx.measureText(ctaDraw).width > textMax && ctaDraw.length > 4) {
+    ctaDraw = ctaDraw.slice(0, -1);
+  }
+  ctx.fillText(ctaDraw, textLeft, H - bottomBar + 162);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -260,7 +382,10 @@ function wrapText(
     }
   }
   if (lines.length < maxLines && line) lines.push(line);
-  if (lines.length === maxLines && chars.join("").length > lines.join("").length) {
+  if (
+    lines.length === maxLines &&
+    chars.join("").length > lines.join("").length
+  ) {
     const last = lines[maxLines - 1] ?? "";
     lines[maxLines - 1] = last.slice(0, Math.max(0, last.length - 1)) + "…";
   }
