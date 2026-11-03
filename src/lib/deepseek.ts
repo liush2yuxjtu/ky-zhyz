@@ -78,7 +78,7 @@ async function callDeepSeek(
     },
     body: JSON.stringify({
       model: MODEL,
-      temperature: 0.25,
+      temperature: 0.85,
       max_tokens: 200,
       response_format: { type: "json_object" },
       messages: [
