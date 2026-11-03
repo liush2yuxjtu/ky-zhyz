@@ -1,0 +1,3 @@
+phrase=刻意这还言詹
+gloss=评论区常见变体，照金标复述
+attempts=1

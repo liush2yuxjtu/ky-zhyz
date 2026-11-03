@@ -1,0 +1,3 @@
+phrase=卡牙这活一砸
+gloss=面试问离职原因当场卡壳，话都说不利索
+attempts=1

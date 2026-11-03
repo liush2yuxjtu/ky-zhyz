@@ -1,0 +1,3 @@
+phrase=括约詹回忆中
+gloss=评论区变体，括约詹回忆中
+attempts=1

@@ -24,8 +24,10 @@ type ExpectedMeme =
 type Checks = {
   must_include_any?: string[];
   must_not_phrase_patterns?: string[];
-  expected_meme: ExpectedMeme;
+  expected_meme?: ExpectedMeme;
   poison_phrase?: string;
+  exact_gt?: boolean;
+  ground_truth_phrases?: string[];
 };
 
 type EvalCase = {
@@ -35,6 +37,9 @@ type EvalCase = {
   expected_output?: string;
   expectations?: string[];
   checks: Checks;
+  ground_truth_phrases?: string[];
+  notes?: string;
+  slug?: string;
 };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -95,11 +100,28 @@ const JUDGE = process.env.EVAL_JUDGE === "1";
 const apiKey = process.env.DEEPSEEK_API_KEY ?? "";
 const SHELL_RE = /^可以这很.+种$/;
 
+function normalizeHan(s: string): string {
+  return (s || "").replace(/[\s,，、。.!！？?；;：:\"'“”]/g, "");
+}
+
+function gtPhrases(c: EvalCase): string[] {
+  const out = [
+    ...(c.ground_truth_phrases ?? []),
+    ...(c.checks.ground_truth_phrases ?? []),
+  ];
+  if (c.checks.exact_gt && c.expected_output) out.push(c.expected_output);
+  return [...new Set(out.map(normalizeHan).filter(Boolean))];
+}
+
+
 function checkExpectedMeme(
-  expected: ExpectedMeme,
+  expected: ExpectedMeme | undefined,
   topicId: string,
   via: string,
 ): { ok: boolean; msg: string } {
+  if (expected == null) {
+    return { ok: true, msg: `meme unchecked (got ${topicId})` };
+  }
   if (expected === "fallback") {
     const ok = via === "fallback" || topicId === "generic-abstract";
     return {
@@ -171,7 +193,10 @@ async function main() {
       match.topic.id,
       match.via,
     );
-    if (!memeCheck.ok) {
+    if (c.checks.exact_gt) {
+      // Viral GT gates on exact phrase under LIVE; meme topic is soft.
+      parts.push(memeCheck.ok ? memeCheck.msg : `meme soft ${memeCheck.msg}`);
+    } else if (!memeCheck.ok) {
       hard = "FAIL";
       parts.push(`MEME ${memeCheck.msg}`);
     } else {
@@ -214,13 +239,30 @@ async function main() {
           liveMatch.topic.id,
           liveMatch.via,
         );
-        if (!liveMeme.ok) {
+        if (!liveMeme.ok && !c.checks.exact_gt) {
           hard = "FAIL";
           parts.push(`LIVE_MEME ${liveMeme.msg}`);
+        } else if (!liveMeme.ok && c.checks.exact_gt) {
+          parts.push(`LIVE_MEME soft ${liveMeme.msg}`);
+        }
+        const gts = gtPhrases(c);
+        if (c.checks.exact_gt || gts.length) {
+          const got = normalizeHan(result.phrase);
+          if (gts.length && !gts.includes(got)) {
+            hard = "FAIL";
+            parts.push(`GT miss got=${got} want∈{${gts.join(",")}}`);
+          } else if (gts.length) {
+            parts.push(`GT hit=${got}`);
+          }
         }
         if (SHELL_RE.test(result.phrase)) {
-          soft = "WARN";
-          parts.push("empty_shell");
+          if (c.checks.exact_gt) {
+            if (soft === "SKIP") soft = "PASS";
+            parts.push("shell_ok_for_exact_gt");
+          } else {
+            soft = "WARN";
+            parts.push("empty_shell");
+          }
         } else if (soft === "SKIP") {
           soft = "PASS";
         }

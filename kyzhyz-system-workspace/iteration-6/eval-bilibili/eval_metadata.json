@@ -1,0 +1,13 @@
+{
+  "eval_id": 20,
+  "eval_name": "bilibili",
+  "prompt": "视频刚发出去就被网暴了",
+  "expected_output": "主题线索含 视/频/网/暴/评；梗图期望: fallback",
+  "assertions": [
+    "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+    "One-shot path: attempts === 1",
+    "Theme uniqueness: phrase includes at least one of [视/频/网/暴/评/看/页/黑] so the scene is uniquely recoverable",
+    "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+    "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+  ]
+}

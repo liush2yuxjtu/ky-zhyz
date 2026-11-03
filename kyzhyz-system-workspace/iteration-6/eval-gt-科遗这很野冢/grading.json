@@ -1,0 +1,28 @@
+{
+  "expectations": [
+    {
+      "text": "phrase equals 科遗这很野冢",
+      "passed": true,
+      "evidence": "GT hit phrase=科遗这很野冢"
+    },
+    {
+      "text": "pinyin pass",
+      "passed": true,
+      "evidence": "phrase=科遗这很野冢 pinyin PASS"
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2,
+    "pass_rate": 1
+  },
+  "timing": {
+    "total_duration_seconds": 1.232,
+    "executor_duration_seconds": 1.232
+  },
+  "eval_feedback": {
+    "overall": "Programmatic grader mapped expectation text → hard checks (pinyin, attempts, theme, shell, meme, poison).",
+    "suggestions": []
+  }
+}

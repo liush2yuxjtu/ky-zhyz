@@ -1,0 +1,13 @@
+{
+  "eval_id": 19,
+  "eval_name": "interview",
+  "prompt": "面试官问你为什么离职我卡壳",
+  "expected_output": "主题线索含 面/试/离/职/卡；梗图期望: fallback",
+  "assertions": [
+    "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+    "One-shot path: attempts === 1",
+    "Theme uniqueness: phrase includes at least one of [面/试/离/职/卡/磕/牙/活] so the scene is uniquely recoverable",
+    "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+    "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+  ]
+}

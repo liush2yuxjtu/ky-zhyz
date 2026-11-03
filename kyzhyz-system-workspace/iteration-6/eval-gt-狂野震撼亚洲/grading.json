@@ -1,0 +1,28 @@
+{
+  "expectations": [
+    {
+      "text": "phrase equals 狂野震撼亚洲 (ignore punctuation)",
+      "passed": true,
+      "evidence": "GT hit phrase=狂野震撼亚洲"
+    },
+    {
+      "text": "pinyin slots pass",
+      "passed": true,
+      "evidence": "phrase=狂野震撼亚洲 pinyin PASS"
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2,
+    "pass_rate": 1
+  },
+  "timing": {
+    "total_duration_seconds": 0.991,
+    "executor_duration_seconds": 0.991
+  },
+  "eval_feedback": {
+    "overall": "Programmatic grader mapped expectation text → hard checks (pinyin, attempts, theme, shell, meme, poison).",
+    "suggestions": []
+  }
+}

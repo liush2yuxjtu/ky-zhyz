@@ -1,0 +1,3 @@
+phrase=靠腰詹皇又作
+gloss=詹皇甩锅还嫌队友不懂球，靠腰又作妖
+attempts=1

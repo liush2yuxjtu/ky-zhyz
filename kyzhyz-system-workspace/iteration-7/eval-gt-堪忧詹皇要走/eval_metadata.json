@@ -1,0 +1,10 @@
+{
+  "eval_id": 33,
+  "eval_name": "gt-堪忧詹皇要走",
+  "prompt": "复述评论区变体：堪忧，詹皇要走",
+  "expected_output": "堪忧詹皇要走",
+  "assertions": [
+    "phrase equals 堪忧詹皇要走",
+    "pinyin pass"
+  ]
+}

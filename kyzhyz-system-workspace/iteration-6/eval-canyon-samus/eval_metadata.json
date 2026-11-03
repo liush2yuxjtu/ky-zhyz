@@ -1,0 +1,13 @@
+{
+  "eval_id": 3,
+  "eval_name": "canyon-samus",
+  "prompt": "Canyon转会抱团被叫三慕斯",
+  "expected_output": "电竞三慕斯；主题线索含 慕/转/团/野/峡谷；梗图期望: canyon",
+  "assertions": [
+    "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+    "One-shot path: attempts === 1",
+    "Theme uniqueness: phrase includes at least one of [慕/转/团/野/峡谷/会] so the scene is uniquely recoverable",
+    "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+    "Meme match topic id is \"canyon\" (scene-first)"
+  ]
+}

@@ -1,0 +1,3 @@
+phrase=苦又这婚要砸
+gloss=爸妈又催婚，心态要砸
+attempts=1

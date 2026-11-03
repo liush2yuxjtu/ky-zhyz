@@ -1,0 +1,3 @@
+phrase=卡又这狠要砸
+gloss=办了健身卡一次没去，钱白花心态要砸
+attempts=1

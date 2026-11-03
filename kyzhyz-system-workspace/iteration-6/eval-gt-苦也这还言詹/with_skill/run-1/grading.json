@@ -1,0 +1,28 @@
+{
+  "expectations": [
+    {
+      "text": "phrase equals 苦也这还言詹",
+      "passed": true,
+      "evidence": "GT hit phrase=苦也这还言詹"
+    },
+    {
+      "text": "pinyin pass",
+      "passed": true,
+      "evidence": "phrase=苦也这还言詹 pinyin PASS"
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2,
+    "pass_rate": 1
+  },
+  "timing": {
+    "total_duration_seconds": 0.993,
+    "executor_duration_seconds": 0.993
+  },
+  "eval_feedback": {
+    "overall": "Programmatic grader mapped expectation text → hard checks (pinyin, attempts, theme, shell, meme, poison).",
+    "suggestions": []
+  }
+}

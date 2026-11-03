@@ -1,0 +1,3 @@
+phrase=快夜这狠要砸
+gloss=减肥第三天深夜点炸鸡，破功心态要砸
+attempts=1

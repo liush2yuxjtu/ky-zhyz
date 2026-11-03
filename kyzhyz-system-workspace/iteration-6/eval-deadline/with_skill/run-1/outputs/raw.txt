@@ -1,0 +1,3 @@
+phrase=快又这活要砸
+gloss=DDL前一晚才动周报，活赶不完心态要砸
+attempts=1

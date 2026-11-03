@@ -1,0 +1,10 @@
+{
+  "eval_id": 36,
+  "eval_name": "gt-科遗这很野冢",
+  "prompt": "复述词典举例：科遗，这很野冢",
+  "expected_output": "科遗这很野冢",
+  "assertions": [
+    "phrase equals 科遗这很野冢",
+    "pinyin pass"
+  ]
+}

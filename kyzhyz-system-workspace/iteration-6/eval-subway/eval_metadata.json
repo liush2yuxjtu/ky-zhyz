@@ -1,0 +1,13 @@
+{
+  "eval_id": 11,
+  "eval_name": "subway",
+  "prompt": "早高峰挤地铁差点没上去",
+  "expected_output": "主题线索含 地/铁/高峰/挤/车；梗图期望: fallback",
+  "assertions": [
+    "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+    "One-shot path: attempts === 1",
+    "Theme uniqueness: phrase includes at least one of [地/铁/高峰/挤/车/横/拥/空] so the scene is uniquely recoverable",
+    "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+    "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
+  ]
+}

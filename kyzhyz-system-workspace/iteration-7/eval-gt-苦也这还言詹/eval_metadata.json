@@ -1,0 +1,10 @@
+{
+  "eval_id": 35,
+  "eval_name": "gt-苦也这还言詹",
+  "prompt": "复述词典举例：苦也这还言詹",
+  "expected_output": "苦也这还言詹",
+  "assertions": [
+    "phrase equals 苦也这还言詹",
+    "pinyin pass"
+  ]
+}

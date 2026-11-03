@@ -1,0 +1,10 @@
+{
+  "eval_id": 34,
+  "eval_name": "gt-科硬这还要撞",
+  "prompt": "复述 NGA 评论：科硬，这还要撞",
+  "expected_output": "科硬这还要撞",
+  "assertions": [
+    "phrase equals 科硬这还要撞",
+    "pinyin pass"
+  ]
+}

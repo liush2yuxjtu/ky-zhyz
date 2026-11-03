@@ -1,0 +1,3 @@
+phrase=考研这狠要砸
+gloss=考研英语阅读又错一片心态要砸
+attempts=1

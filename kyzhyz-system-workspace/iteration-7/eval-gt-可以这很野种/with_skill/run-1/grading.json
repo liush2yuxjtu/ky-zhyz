@@ -1,0 +1,33 @@
+{
+  "expectations": [
+    {
+      "text": "phrase is exactly one of ground_truth_phrases (ignore punctuation)",
+      "passed": true,
+      "evidence": "GT hit phrase=可以这很野种"
+    },
+    {
+      "text": "pinyin slots pass k/y/zh/h/y/z",
+      "passed": true,
+      "evidence": "phrase=可以这很野种 pinyin PASS"
+    },
+    {
+      "text": "attempts === 1 when generation succeeds",
+      "passed": true,
+      "evidence": "attempts=1, MAX_ATTEMPTS=1"
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1
+  },
+  "timing": {
+    "total_duration_seconds": 0.902,
+    "executor_duration_seconds": 0.902
+  },
+  "eval_feedback": {
+    "overall": "Programmatic grader mapped expectation text → hard checks (pinyin, attempts, theme, shell, meme, poison).",
+    "suggestions": []
+  }
+}

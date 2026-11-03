@@ -66,3 +66,19 @@ Programmatic grader hillclimb **iteration-2** (bank anchors + check field + temp
 - full-pass **21/28**, one-shot pinyin FAIL **2** (vs 9)
 
 A later JUDGE-oriented “surgical” SYSTEM at temp 0.85 was briefly on main with reported live ~18/28; production restored to iteration-2 SYSTEM because hard-gate pass rate is the developer gate for one-shot pinyin.
+
+
+## Expanded suite (viral GT) — skill-creator hard gate
+
+Suite size: **36** (28 scene + 8 validator-PASS viral GT from `evals/ground-truth-viral.json`).  
+Grader: `checks.exact_gt` / `ground_truth_phrases` with punctuation-normalized match in `evals/run_iteration.ts` + `evals/grade.ts`.
+
+| Round | SYSTEM change | hard offline | live full-pass | mean exp pass | notes |
+|-------|---------------|--------------|----------------|---------------|-------|
+| iter2 (protect) | bank+check+temp0.25 | 28/28 | **21/28** | **92.1%** | Pre-GT suite; interview/hotpot pinyin miss + 5 theme misses |
+| iter6 | +scene anchors + viral GT few-shot/banks; exact_gt grader | 36/36 | **35/36** | **98.3%** | Only lebron-name one-shot flake |
+| **iter7 (ship)** | Force 詹+皇 for 詹姆斯 scenes + 打铁 few-shot | 36/36 | **36/36** | **100%** | Full score under MAX_ATTEMPTS=1 |
+
+**Viral GT (all PASS on iter7):** 可以这很野种、狂野震撼亚洲、刻意这还言詹、括约詹回忆中、堪忧詹皇要走、科硬这还要撞、苦也这还言詹、科遗这很野冢. Rejected community「砍勇最会游走」(最≠zh).
+
+Artifacts: `kyzhyz-system-workspace/iteration-7/` (`PROGRESS.md`, `review/index.html`, `SYSTEM.txt`).

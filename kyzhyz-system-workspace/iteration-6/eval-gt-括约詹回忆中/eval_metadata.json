@@ -1,0 +1,10 @@
+{
+  "eval_id": 32,
+  "eval_name": "gt-括约詹回忆中",
+  "prompt": "复述评论区变体：括约，詹回忆中",
+  "expected_output": "括约詹回忆中",
+  "assertions": [
+    "phrase equals 括约詹回忆中",
+    "pinyin pass"
+  ]
+}

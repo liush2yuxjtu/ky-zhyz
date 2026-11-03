@@ -1,0 +1,3 @@
+phrase=快呀这盒一砸
+gloss=新手机开盒第一天就摔碎屏，心态砸了
+attempts=1

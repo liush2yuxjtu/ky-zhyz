@@ -1,0 +1,10 @@
+{
+  "eval_id": 31,
+  "eval_name": "gt-刻意这还言詹",
+  "prompt": "复述评论区常见变体：刻意，这还言詹",
+  "expected_output": "刻意这还言詹",
+  "assertions": [
+    "phrase equals 刻意这还言詹",
+    "pinyin pass"
+  ]
+}

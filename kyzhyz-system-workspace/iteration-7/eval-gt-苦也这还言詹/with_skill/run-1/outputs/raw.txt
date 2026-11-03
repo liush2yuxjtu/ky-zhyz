@@ -1,0 +1,3 @@
+phrase=苦也这还言詹
+gloss=词典举例，复述评论区变体
+attempts=1

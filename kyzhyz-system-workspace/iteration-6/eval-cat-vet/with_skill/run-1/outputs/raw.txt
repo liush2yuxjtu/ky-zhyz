@@ -1,0 +1,3 @@
+phrase=哭冤这花要砸
+gloss=带猫看病花掉半月工资，冤到心态砸
+attempts=1

@@ -1,0 +1,14 @@
+{
+  "eval_id": 7,
+  "eval_name": "milk-tea",
+  "prompt": "排队半小时买奶茶还加错糖",
+  "expected_output": "日常消费；phrase 带野种也不得命中 lebron；主题线索含 奶/茶/糖/排/杯；梗图期望: fallback",
+  "assertions": [
+    "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+    "One-shot path: attempts === 1",
+    "Theme uniqueness: phrase includes at least one of [奶/茶/糖/排/杯/饮/喝/客/坑] so the scene is uniquely recoverable",
+    "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+    "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)",
+    "Poison guard: matching with phrase \"可以这很野种\" must NOT yield lebron via keyword pollution"
+  ]
+}

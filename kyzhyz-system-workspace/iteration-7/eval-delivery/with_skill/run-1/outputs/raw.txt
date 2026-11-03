@@ -1,0 +1,3 @@
+phrase=可油这盒一砸
+gloss=外卖迟到一小时还洒了，油盒一砸心态崩
+attempts=1

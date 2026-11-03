@@ -1,0 +1,11 @@
+{
+  "eval_id": 29,
+  "eval_name": "gt-可以这很野种",
+  "prompt": "用经典原句嘲讽詹姆斯抽象操作（NBA吧定型文）",
+  "expected_output": "可以这很野种",
+  "assertions": [
+    "phrase is exactly one of ground_truth_phrases (ignore punctuation)",
+    "pinyin slots pass k/y/zh/h/y/z",
+    "attempts === 1 when generation succeeds"
+  ]
+}

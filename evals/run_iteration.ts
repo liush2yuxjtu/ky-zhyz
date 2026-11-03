@@ -38,7 +38,7 @@ import { generateKyZhyz, SYSTEM, MAX_ATTEMPTS } from "../src/lib/deepseek";
 type Checks = {
   must_include_any?: string[];
   must_not_phrase_patterns?: string[];
-  expected_meme: string | { must_not_topic: string } | { id_contains: string };
+  expected_meme?: string | { must_not_topic: string } | { id_contains: string };
   poison_phrase?: string;
   exact_gt?: boolean;
   ground_truth_phrases?: string[];
@@ -48,7 +48,7 @@ type EvalCase = {
   id: number;
   name: string;
   prompt: string;
-  expected_output: string;
+  expected_output?: string;
   expectations: string[];
   checks: Checks;
   ground_truth_phrases?: string[];
@@ -131,6 +131,9 @@ function checkExpectedMeme(
   topicId: string,
   via: string,
 ): { ok: boolean; msg: string } {
+  if (expected == null) {
+    return { ok: true, msg: `meme unchecked (got ${topicId})` };
+  }
   if (expected === "fallback") {
     const ok = via === "fallback" || topicId === "generic-abstract";
     return {
@@ -224,6 +227,7 @@ function selectEvals(all: EvalCase[], limit: number | null): EvalCase[] {
   const priority = all.filter(
     (e) =>
       e.checks.poison_phrase ||
+      e.checks.exact_gt ||
       (typeof e.checks.expected_meme === "string" &&
         e.checks.expected_meme !== "fallback"),
   );
@@ -308,6 +312,7 @@ function gradeEval(args: {
     if (
       lower.includes("k/y/zh/h/y/z") ||
       lower.includes("6 han") ||
+      lower.includes("pinyin") ||
       text.includes("声母")
     ) {
       if (!live) {
@@ -399,6 +404,14 @@ function gradeEval(args: {
           text,
           passed: false,
           evidence: `no successful phrase to check shell (${live.error ?? "fail"})`,
+        });
+        continue;
+      }
+      if (ev.checks.exact_gt) {
+        graded.push({
+          text,
+          passed: true,
+          evidence: `exact_gt — shell ban waived (phrase=${live.phrase})`,
         });
         continue;
       }

@@ -1,0 +1,3 @@
+phrase=苦夜这活要砸
+gloss=周五晚上加班改需求，熬夜干活心态要砸
+attempts=1

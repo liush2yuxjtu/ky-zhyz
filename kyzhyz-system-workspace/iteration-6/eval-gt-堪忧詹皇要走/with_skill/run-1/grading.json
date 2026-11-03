@@ -1,0 +1,28 @@
+{
+  "expectations": [
+    {
+      "text": "phrase equals 堪忧詹皇要走",
+      "passed": true,
+      "evidence": "GT hit phrase=堪忧詹皇要走"
+    },
+    {
+      "text": "pinyin pass",
+      "passed": true,
+      "evidence": "phrase=堪忧詹皇要走 pinyin PASS"
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2,
+    "pass_rate": 1
+  },
+  "timing": {
+    "total_duration_seconds": 0.993,
+    "executor_duration_seconds": 0.993
+  },
+  "eval_feedback": {
+    "overall": "Programmatic grader mapped expectation text → hard checks (pinyin, attempts, theme, shell, meme, poison).",
+    "suggestions": []
+  }
+}
