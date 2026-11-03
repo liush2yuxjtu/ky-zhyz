@@ -1,0 +1,3 @@
+phrase=苦夜这活又砸
+gloss=周五夜还在加班改需求，活又砸了
+attempts=1

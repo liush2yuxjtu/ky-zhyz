@@ -1,0 +1,3 @@
+phrase=快夜这活要栽
+gloss=DDL前一晚才动笔写周报，熬夜赶活必栽
+attempts=1

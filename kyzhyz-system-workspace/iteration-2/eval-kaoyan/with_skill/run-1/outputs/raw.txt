@@ -1,0 +1,3 @@
+phrase=考研这毁一栽
+gloss=考研英语阅读又错一片，心态毁了一截
+attempts=1

@@ -1,0 +1,3 @@
+phrase=坑呀涨狠要砸
+gloss=房东又涨租还不修水管，坑人得想砸
+attempts=1

@@ -1,0 +1,13 @@
+{
+  "eval_id": 1,
+  "eval_name": "lebron-slam",
+  "prompt": "詹皇又甩锅还说队友不懂球",
+  "expected_output": "球星场景应命中 lebron；六字须可回指詹姆斯/甩锅；主题线索含 詹/皇/勒/布朗/湖人/甩；梗图期望: lebron",
+  "assertions": [
+    "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+    "One-shot path: attempts === 1",
+    "Theme uniqueness: phrase includes at least one of [詹/皇/勒/布朗/湖人/甩] so the scene is uniquely recoverable",
+    "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+    "Meme match topic id is \"lebron\" (scene-first)"
+  ]
+}

@@ -484,6 +484,33 @@ async function main() {
   mkdirSync(ws, { recursive: true });
   writeFileSync(join(ws, "SYSTEM.txt"), SYSTEM, "utf8");
 
+  // Snapshot previous SYSTEM for A/B context (skill-creator old_skill analog)
+  if (iteration > 1) {
+    const prevSys = join(
+      ROOT,
+      "kyzhyz-system-workspace",
+      `iteration-${iteration - 1}`,
+      "SYSTEM.txt",
+    );
+    if (existsSync(prevSys)) {
+      cpSync(prevSys, join(ws, "SYSTEM.prev.txt"));
+      const oldSkillDir = join(ws, "old_skill");
+      mkdirSync(oldSkillDir, { recursive: true });
+      cpSync(prevSys, join(oldSkillDir, "SYSTEM.txt"));
+      writeFileSync(
+        join(oldSkillDir, "README.md"),
+        [
+          `# old_skill baseline`,
+          ``,
+          `Snapshot of iteration-${iteration - 1} SYSTEM before this rewrite.`,
+          `Full graded outputs live in ../iteration-${iteration - 1}/.`,
+          ``,
+        ].join("\n"),
+        "utf8",
+      );
+    }
+  }
+
   console.log(
     `iteration-${iteration}: ${selected.length}/${data.evals.length} evals, JUDGE=${JUDGE}, MAX_ATTEMPTS=${MAX_ATTEMPTS}`,
   );
@@ -714,14 +741,18 @@ async function main() {
     bench.metadata.analyzer_model = "programmatic+optional-judge";
     bench.metadata.runs_per_configuration = 1;
     bench.metadata.configuration_note =
-      "with_skill = current SYSTEM in src/lib/deepseek.ts (baseline iteration; no rewrite yet)";
+      iteration > 1
+        ? `with_skill = rewritten SYSTEM (iteration-${iteration}); old_skill/SYSTEM.txt = iteration-${iteration - 1} snapshot`
+        : "with_skill = current SYSTEM in src/lib/deepseek.ts (baseline iteration; no rewrite yet)";
     // Attach eval_name for viewer headers
     for (const run of bench.runs) {
       const ev = selected.find((e) => e.id === run.eval_id);
       if (ev) run.eval_name = ev.name;
     }
     bench.notes = [
-      "Iteration baseline: CURRENT SYSTEM snapshot in SYSTEM.txt — do not rewrite until human reviews static viewer.",
+      iteration > 1
+        ? `Iteration-${iteration} rewrite. SYSTEM.txt = new; SYSTEM.prev.txt / old_skill = prior SYSTEM. Compare vs iteration-${iteration - 1}.`
+        : "Iteration baseline: CURRENT SYSTEM snapshot in SYSTEM.txt — do not rewrite until human reviews static viewer.",
       `Evals run: ${selected.map((e) => e.name).join(", ")}`,
       JUDGE
         ? "EVAL_JUDGE=1: wanggan/unique ≥4 appended as extra expectations."
@@ -734,20 +765,27 @@ async function main() {
   const reviewDir = join(ws, "review");
   mkdirSync(reviewDir, { recursive: true });
   const reviewOut = join(reviewDir, "index.html");
-  const rev = spawnSync(
-    "python3",
-    [
-      join(SKILL_CREATOR, "eval-viewer", "generate_review.py"),
-      ws,
-      "--skill-name",
-      data.skill_name,
-      "--benchmark",
-      join(ws, "benchmark.json"),
-      "--static",
-      reviewOut,
-    ],
-    { encoding: "utf8" },
-  );
+  const reviewArgs = [
+    join(SKILL_CREATOR, "eval-viewer", "generate_review.py"),
+    ws,
+    "--skill-name",
+    data.skill_name,
+    "--benchmark",
+    join(ws, "benchmark.json"),
+    "--static",
+    reviewOut,
+  ];
+  if (iteration > 1) {
+    const prevWs = join(
+      ROOT,
+      "kyzhyz-system-workspace",
+      `iteration-${iteration - 1}`,
+    );
+    if (existsSync(prevWs)) {
+      reviewArgs.push("--previous-workspace", prevWs);
+    }
+  }
+  const rev = spawnSync("python3", reviewArgs, { encoding: "utf8" });
   process.stdout.write(rev.stdout || "");
   process.stderr.write(rev.stderr || "");
   if (rev.status !== 0) {
@@ -763,7 +801,8 @@ async function main() {
   const progressMd = `# SYSTEM hillclimb — iteration-${iteration} PROGRESS
 
 **Time (Asia/Taipei):** ${new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" })}  
-**Config:** \`with_skill\` = current SYSTEM (baseline — **no rewrite this iteration**)  
+**Config:** \`with_skill\` = current SYSTEM${iteration > 1 ? ` (rewrite vs iteration-${iteration - 1})` : " (baseline)"}  
+**Hypothesis:** ${iteration > 1 ? "Bank-only chars + check field + legal theme anchors + temp 0.25 → lift one-shot pinyin; keep 网感/禁壳." : "Baseline — no rewrite."}  
 **Evals:** ${progressRows.length} / ${data.evals.length}  
 **Mean expectation pass rate:** ${(meanPass * 100).toFixed(1)}%  
 **Evals with 100% expectations:** ${hardAllPass}/${progressRows.length}  

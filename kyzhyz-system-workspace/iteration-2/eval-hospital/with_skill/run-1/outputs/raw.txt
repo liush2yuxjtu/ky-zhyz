@@ -1,0 +1,3 @@
+phrase=看又这活冤种
+gloss=挂号排一天看病两分钟真冤种
+attempts=1

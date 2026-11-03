@@ -1,0 +1,43 @@
+{
+  "expectations": [
+    {
+      "text": "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+      "passed": true,
+      "evidence": "phrase=靠拥这狠一栽 pinyin PASS"
+    },
+    {
+      "text": "One-shot path: attempts === 1",
+      "passed": true,
+      "evidence": "attempts=1, MAX_ATTEMPTS=1"
+    },
+    {
+      "text": "Theme uniqueness: phrase includes at least one of [地/铁/高峰/挤/车/横/拥/空] so the scene is uniquely recoverable",
+      "passed": true,
+      "evidence": "phrase=靠拥这狠一栽 hits theme clue"
+    },
+    {
+      "text": "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+      "passed": true,
+      "evidence": "phrase=靠拥这狠一栽 not empty shell"
+    },
+    {
+      "text": "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)",
+      "passed": true,
+      "evidence": "scene: meme=fallback (generic-abstract); with_phrase: meme=fallback (generic-abstract)"
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1
+  },
+  "timing": {
+    "total_duration_seconds": 1.341,
+    "executor_duration_seconds": 1.341
+  },
+  "eval_feedback": {
+    "overall": "Programmatic grader mapped expectation text → hard checks (pinyin, attempts, theme, shell, meme, poison).",
+    "suggestions": []
+  }
+}

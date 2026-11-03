@@ -1,0 +1,3 @@
+phrase=看页这黑又砸
+gloss=视频刚发就被网暴，看页面黑评又砸心态
+attempts=1

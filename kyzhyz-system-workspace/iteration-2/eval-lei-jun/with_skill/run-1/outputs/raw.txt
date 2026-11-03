@@ -1,0 +1,3 @@
+phrase=空言这哄又栽
+gloss=雷军发布会空言哄粉又栽跟头
+attempts=1

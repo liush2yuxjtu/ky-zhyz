@@ -62,7 +62,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [慕/转/团/野/峡谷] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [慕/转/团/野/峡谷/会] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match topic id is \"canyon\" (scene-first)"
       ],
@@ -72,7 +72,8 @@
           "转",
           "团",
           "野",
-          "峡谷"
+          "峡谷",
+          "会"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -113,7 +114,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [雷/军/米/发布] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [雷/军/米/发布/空/言/哄/会] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match topic id is \"leijun\" (scene-first)"
       ],
@@ -122,7 +123,11 @@
           "雷",
           "军",
           "米",
-          "发布"
+          "发布",
+          "空",
+          "言",
+          "哄",
+          "会"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -138,7 +143,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [论/稿/审/文/博/研] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [论/稿/审/文/博/研/苦] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -149,7 +154,8 @@
           "审",
           "文",
           "博",
-          "研"
+          "研",
+          "苦"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$",
@@ -166,7 +172,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [奶/茶/糖/排/杯] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [奶/茶/糖/排/杯/饮/喝/客/坑] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)",
         "Poison guard: matching with phrase \"可以这很野种\" must NOT yield lebron via keyword pollution"
@@ -177,7 +183,11 @@
           "茶",
           "糖",
           "排",
-          "杯"
+          "杯",
+          "饮",
+          "喝",
+          "客",
+          "坑"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$",
@@ -195,7 +205,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [考/研/英/阅/题/分] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [考/研/英/阅/题/分/毁] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match topic id is \"zhangxuefeng\" (scene-first)",
         "Poison guard: matching with phrase \"可以这很野种\" must NOT yield lebron via keyword pollution"
@@ -207,7 +217,8 @@
           "英",
           "阅",
           "题",
-          "分"
+          "分",
+          "毁"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$",
@@ -225,7 +236,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [班/饼/老板/工/会/周一] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [班/饼/老板/工/会/周一/空/言/哄/员] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)",
         "Poison guard: matching with phrase \"可以这很野种\" must NOT yield lebron via keyword pollution"
@@ -237,7 +248,11 @@
           "老板",
           "工",
           "会",
-          "周一"
+          "周一",
+          "空",
+          "言",
+          "哄",
+          "员"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$",
@@ -255,7 +270,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [加/班/需/改/工/周] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [加/班/需/改/工/周/活/夜/压] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -266,7 +281,10 @@
           "需",
           "改",
           "工",
-          "周"
+          "周",
+          "活",
+          "夜",
+          "压"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -282,7 +300,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [地/铁/高峰/挤/车] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [地/铁/高峰/挤/车/横/拥/空] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -292,7 +310,10 @@
           "铁",
           "高峰",
           "挤",
-          "车"
+          "车",
+          "横",
+          "拥",
+          "空"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -308,7 +329,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [外/卖/迟/洒/骑] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [外/卖/迟/洒/骑/盒/油/可] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -318,7 +339,10 @@
           "卖",
           "迟",
           "洒",
-          "骑"
+          "骑",
+          "盒",
+          "油",
+          "可"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -334,7 +358,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [房/租/涨/管/房东] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [房/租/涨/管/房东/空/砸] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -344,7 +368,9 @@
           "租",
           "涨",
           "管",
-          "房东"
+          "房东",
+          "空",
+          "砸"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -360,7 +386,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [健/身/卡/练/肌] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [健/身/卡/练/肌/苦/狠] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -370,7 +396,9 @@
           "身",
           "卡",
           "练",
-          "肌"
+          "肌",
+          "苦",
+          "狠"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -386,7 +414,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [排/位/跪/菜/队] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [排/位/跪/菜/队/坑/友/火/栽] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -396,7 +424,11 @@
           "位",
           "跪",
           "菜",
-          "队"
+          "队",
+          "坑",
+          "友",
+          "火",
+          "栽"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -412,7 +444,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [基/金/跌/股/亏] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [基/金/跌/股/亏/栽] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -422,7 +454,8 @@
           "金",
           "跌",
           "股",
-          "亏"
+          "亏",
+          "栽"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -438,7 +471,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [挂/号/医/病/院] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [挂/号/医/病/院/苦/忽] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -448,7 +481,9 @@
           "号",
           "医",
           "病",
-          "院"
+          "院",
+          "苦",
+          "忽"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -464,7 +499,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [婚/爸/妈/催/结] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [婚/爸/妈/催/结/苦] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -474,7 +509,8 @@
           "爸",
           "妈",
           "催",
-          "结"
+          "结",
+          "苦"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -490,7 +526,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [面/试/离/职/卡] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [面/试/离/职/卡/磕/牙/活] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -500,7 +536,10 @@
           "试",
           "离",
           "职",
-          "卡"
+          "卡",
+          "磕",
+          "牙",
+          "活"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -516,7 +555,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [视/频/网/暴/评] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [视/频/网/暴/评/看/页/黑] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -526,7 +565,10 @@
           "频",
           "网",
           "暴",
-          "评"
+          "评",
+          "看",
+          "页",
+          "黑"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -542,7 +584,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [猫/病/工/资/宠] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [猫/病/工/资/宠/哭/花/冤] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -552,7 +594,10 @@
           "病",
           "工",
           "资",
-          "宠"
+          "宠",
+          "哭",
+          "花",
+          "冤"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -568,7 +613,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [手/机/屏/摔/碎] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [手/机/屏/摔/碎/开/砸/狠/冤] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -578,7 +623,11 @@
           "机",
           "屏",
           "摔",
-          "碎"
+          "碎",
+          "开",
+          "砸",
+          "狠",
+          "冤"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -594,7 +643,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [减/肥/炸/鸡/夜] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [减/肥/炸/鸡/夜/荤/瘾] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -604,7 +653,9 @@
           "肥",
           "炸",
           "鸡",
-          "夜"
+          "夜",
+          "荤",
+          "瘾"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -660,7 +711,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [火/锅/等/位/胃] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [火/锅/等/位/胃/号/空] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -670,7 +721,9 @@
           "锅",
           "等",
           "位",
-          "胃"
+          "胃",
+          "号",
+          "空"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -686,7 +739,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [周/报/写/截/稿/DDL/ddl] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [周/报/写/截/稿/DDL/ddl/夜/活/开] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -698,7 +751,10 @@
           "截",
           "稿",
           "DDL",
-          "ddl"
+          "ddl",
+          "夜",
+          "活",
+          "开"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"
@@ -714,7 +770,7 @@
       "expectations": [
         "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
         "One-shot path: attempts === 1",
-        "Theme uniqueness: phrase includes at least one of [失/眠/睡/刷/夜] so the scene is uniquely recoverable",
+        "Theme uniqueness: phrase includes at least one of [失/眠/睡/刷/夜/哭/苦] so the scene is uniquely recoverable",
         "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
         "Meme match is fallback / generic-abstract (daily scene, no celebrity keyword)"
       ],
@@ -724,7 +780,9 @@
           "眠",
           "睡",
           "刷",
-          "夜"
+          "夜",
+          "哭",
+          "苦"
         ],
         "must_not_phrase_patterns": [
           "^可以这很野种$"

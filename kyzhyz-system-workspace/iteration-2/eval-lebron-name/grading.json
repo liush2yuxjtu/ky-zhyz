@@ -1,0 +1,43 @@
+{
+  "expectations": [
+    {
+      "text": "When generation succeeds: phrase is exactly 6 han characters with pinyin initials k/y/zh/h/y/z",
+      "passed": true,
+      "evidence": "phrase=靠腰詹皇又砸 pinyin PASS"
+    },
+    {
+      "text": "One-shot path: attempts === 1",
+      "passed": true,
+      "evidence": "attempts=1, MAX_ATTEMPTS=1"
+    },
+    {
+      "text": "Theme uniqueness: phrase includes at least one of [詹/铁/球/皇] so the scene is uniquely recoverable",
+      "passed": true,
+      "evidence": "phrase=靠腰詹皇又砸 hits theme clue"
+    },
+    {
+      "text": "Must not be empty-shell template 可以这很X种 unless the scene itself warrants 野种 as the core meme",
+      "passed": true,
+      "evidence": "phrase=靠腰詹皇又砸 not empty shell"
+    },
+    {
+      "text": "Meme match topic id is \"lebron\" (scene-first)",
+      "passed": true,
+      "evidence": "scene: meme=lebron; with_phrase: meme=lebron"
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1
+  },
+  "timing": {
+    "total_duration_seconds": 1.187,
+    "executor_duration_seconds": 1.187
+  },
+  "eval_feedback": {
+    "overall": "Programmatic grader mapped expectation text → hard checks (pinyin, attempts, theme, shell, meme, poison).",
+    "suggestions": []
+  }
+}

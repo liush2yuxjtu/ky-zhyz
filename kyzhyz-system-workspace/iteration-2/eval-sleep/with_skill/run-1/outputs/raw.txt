@@ -1,0 +1,3 @@
+phrase=苦夜这黑又栽
+gloss=熬到四点刷手机失眠又栽
+attempts=1

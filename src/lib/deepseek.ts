@@ -4,6 +4,7 @@ import {
   validateKyZhyz,
   type ValidationResult,
 } from "./validator";
+import { SYSTEM_PROMPT } from "./system-prompt";
 
 const API_URL = "https://api.deepseek.com/chat/completions";
 const MODEL = "deepseek-chat";
@@ -42,33 +43,13 @@ export type AttemptProgress = {
 
 type ModelJson = { phrase?: string; gloss?: string };
 
-/** Exported for developer hillclimb / evals — edit here, then `npm run eval:quality`. */
-export const SYSTEM = `你是「ky,zhyz」造句机。用户丢一个场景，你必须【一次】给出恰好 6 个汉字。
 
-【最高优先级：声母】从左到右必须是：
-1 k · 2 y · 3 zh · 4 h · 5 y · 6 z
-第3字只能是「这/震/詹/长(zhǎng)/涨/仗/着…」等 zh 声母字；第6字必须是 z 声母（在/哉/咋/揍/作/种zhong/洲zhou 皆可）。
-输出前请逐格默念声母；有一格不对就整句重写，不要凑合。
-
-【第二优先级：主题唯一性】六字要让人一眼认出【这个】场景。把场景核心实体/动作写进 phrase（或强可回指）。换一个无关场景后，这六字应对不上号。
-【网感】贴吧/抽象/口头禅，像真人嘴炮，不是说明书/新闻标题。
-【禁万能壳】禁止「可以这很野种」「可以这很X种」空壳，除非「野种」真是该场景核心梗。「狂野震撼亚洲」也仅当场景真偏狂野/震撼时可用。
-
-只输出 JSON：{"phrase":"六个汉字","gloss":"一句话说明怎么扣题"}。不要 markdown。
-
-合格短例（声母已过，学结构勿照抄）：
-- 场景「排队买奶茶加错糖」→ {"phrase":"客爷这喝冤哉","gloss":"顾客对店员这单糖加错的窝火"}
-- 场景「詹皇甩锅」→ {"phrase":"靠腰詹皇佯作","gloss":"靠腰吐槽詹皇甩锅还假装没事"}
-- 场景「周一被老板画饼」→ {"phrase":"空言这哄员工","gloss":"老板空言画饼哄员工"}
-
-坏例（禁止）：
-- 任意场景都回「可以这很野种」
-- 为了扣题牺牲声母（如「空口画饼真绝」第2格kou≠y）
-- 场景是奶茶，却写成球星黑话且与奶茶无关`;
+/** Exported for developer hillclimb / evals — edit src/lib/system-prompt.txt (+ sync .ts), then `npm run eval:iteration`. */
+export const SYSTEM = SYSTEM_PROMPT;
 
 function buildUser(scene: string, repair?: string): string {
   if (!repair) {
-    return `场景：${scene}\n请一次性输出合格 JSON（one-shot，不会给你第二次机会）。`;
+    return `场景：${scene}\n一次性输出合格 JSON。先按六格选字（优先口播表+合法锚点），默念 k-y-zh-h-y-z，再交卷。不会重试。`;
   }
   return `场景：${scene}\n上一版有格子首字母不合 ky,zhyz，已交回生成器：${repair}\n请输出新的 6 字 JSON，务必凑齐 k/y/zh/h/y/z。`;
 }
@@ -97,7 +78,7 @@ async function callDeepSeek(
     },
     body: JSON.stringify({
       model: MODEL,
-      temperature: 0.9,
+      temperature: 0.25,
       max_tokens: 200,
       response_format: { type: "json_object" },
       messages: [

@@ -1,0 +1,3 @@
+phrase=快呀这狠一砸
+gloss=新手机第一天就摔碎屏，快呀这狠一砸
+attempts=1
