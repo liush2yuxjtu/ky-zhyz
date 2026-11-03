@@ -38,6 +38,11 @@ type StreamEvent =
   | (ApiOk & { type: "result" })
   | (ApiFail & { type: "result" });
 
+/** Auto-retry toggle label — must PASS ky,zhyz (了→又 so slot2=y). */
+const AUTO_RETRY_PHRASE = "垮又再会硬造";
+const AUTO_RETRY_DISPLAY = "垮又，再会硬造";
+const AUTO_RETRY_MAX = 12;
+
 /** Short chip label + real scene text (avoid AI-demo essay chips). */
 const EXAMPLES: { label: string; scene: string }[] = [
   { label: "奶茶", scene: "奶茶加错糖还排队半小时" },
@@ -114,9 +119,35 @@ export default function Home() {
     false,
     false,
   ]);
+  const [autoRetry, setAutoRetry] = useState(false);
+  const autoRetryRef = useRef(false);
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
     textareaRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("ky-zhyz-auto-retry");
+      if (saved === "1") {
+        setAutoRetry(true);
+        autoRetryRef.current = true;
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const setAutoRetryOn = useCallback((on: boolean) => {
+    setAutoRetry(on);
+    autoRetryRef.current = on;
+    try {
+      localStorage.setItem("ky-zhyz-auto-retry", on ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+    track("auto_retry_toggle", { on: on ? 1 : 0 });
   }, []);
 
   const generate = useCallback(
@@ -130,6 +161,7 @@ export default function Home() {
       setLoading(true);
       setError(null);
       setMemeOpen(false);
+      setRetryTick(0);
       // Keep current board while locked-regenerating so fail does not wipe locks.
       if (!lockedMask.some(Boolean)) {
         setDisplay("");
@@ -142,61 +174,93 @@ export default function Home() {
 
       track("generate_click", {
         has_example: Boolean(opts?.fromExample),
+        auto_retry: autoRetryRef.current ? 1 : 0,
       });
 
+      const locksPayload = lockedMask.map((on, i) =>
+        on && slots?.[i]?.char ? slots[i]!.char : null,
+      );
+
+      let round = 0;
       try {
-        const res = await fetch("/api/generate", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "text/event-stream",
-          },
-          body: JSON.stringify({
-            scene: text,
-            avoid: recentPhrasesRef.current.slice(-8),
-            locks: lockedMask.map((on, i) =>
-              on && slots?.[i]?.char ? slots[i]!.char : null,
-            ),
-          }),
-        });
+        while (true) {
+          round += 1;
+          if (round > 1) setRetryTick(round);
 
-        const ct = res.headers.get("content-type") ?? "";
-        if (ct.includes("application/json")) {
-          const data = (await res.json()) as ApiFail;
-          track("generate_fail", {
-            attempts: typeof data.attempts === "number" ? data.attempts : 0,
+          const res = await fetch("/api/generate", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "text/event-stream",
+            },
+            body: JSON.stringify({
+              scene: text,
+              avoid: recentPhrasesRef.current.slice(-8),
+              locks: locksPayload,
+            }),
           });
-          setError(data.error || "生成出了点岔子，再试一次。");
-          return;
-        }
 
-        const data = await readGenerateStream(res);
+          const ct = res.headers.get("content-type") ?? "";
+          if (ct.includes("application/json")) {
+            const data = (await res.json()) as ApiFail;
+            track("generate_fail", {
+              attempts: typeof data.attempts === "number" ? data.attempts : 0,
+              round,
+            });
+            const canRetry =
+              autoRetryRef.current && round < AUTO_RETRY_MAX;
+            if (canRetry) {
+              continue;
+            }
+            if (!lockedMask.some(Boolean)) {
+              setDisplay("");
+              setGloss("");
+              setSlots(undefined);
+              setMemeTitle("");
+              setMemeSrc("");
+              setMemeNote("");
+            }
+            setError(data.error || "生成出了点岔子，再试一次。");
+            return;
+          }
 
-        if (data.ok && data.validation?.pass) {
-          track("generate_success", {
-            attempts: typeof data.attempts === "number" ? data.attempts : 0,
-          });
-          if (typeof data.phrase === "string" && data.phrase) {
-            const next = [
-              ...recentPhrasesRef.current.filter((p) => p !== data.phrase),
-              data.phrase,
-            ];
-            recentPhrasesRef.current = next.slice(-8);
+          const data = await readGenerateStream(res);
+
+          if (data.ok && data.validation?.pass) {
+            track("generate_success", {
+              attempts: typeof data.attempts === "number" ? data.attempts : 0,
+              round,
+              auto_retry: autoRetryRef.current ? 1 : 0,
+            });
+            if (typeof data.phrase === "string" && data.phrase) {
+              const next = [
+                ...recentPhrasesRef.current.filter((p) => p !== data.phrase),
+                data.phrase,
+              ];
+              recentPhrasesRef.current = next.slice(-8);
+            }
+            setDisplay(data.display);
+            setGloss(data.gloss);
+            setSlots(data.validation.slots);
+            if (data.topic?.memeSrc) {
+              setMemeTitle(data.topic.name || "");
+              setMemeSrc(data.topic.memeSrc);
+              setMemeNote(data.topic.note || "");
+            }
+            setError(null);
+            setRetryTick(0);
+            return;
           }
-          setDisplay(data.display);
-          setGloss(data.gloss);
-          setSlots(data.validation.slots);
-          if (data.topic?.memeSrc) {
-            setMemeTitle(data.topic.name || "");
-            setMemeSrc(data.topic.memeSrc);
-            setMemeNote(data.topic.note || "");
-          }
-          // Do NOT auto-open meme — show board first
-        } else {
+
           track("generate_fail", {
             attempts:
               typeof data.attempts === "number" ? data.attempts : undefined,
+            round,
           });
+          const canRetry = autoRetryRef.current && round < AUTO_RETRY_MAX;
+          if (canRetry) {
+            continue;
+          }
           if (!lockedMask.some(Boolean)) {
             setDisplay("");
             setGloss("");
@@ -209,14 +273,17 @@ export default function Home() {
             (!data.ok && data.error) ||
               "这波没凑齐 ky,zhyz，点一下再试一次就好。",
           );
+          setRetryTick(0);
+          return;
         }
       } catch {
-        track("generate_fail", {});
+        track("generate_fail", { round });
         if (!lockedMask.some(Boolean)) {
           setDisplay("");
           setSlots(undefined);
         }
         setError("网络挂了，再点一次");
+        setRetryTick(0);
       } finally {
         setLoading(false);
       }
@@ -226,7 +293,10 @@ export default function Home() {
 
   const showResult = Boolean(slots);
   const canMeme = Boolean(memeSrc);
-  const loadingLabel = "生成中…";
+  const loadingLabel =
+    retryTick > 1
+      ? `${AUTO_RETRY_PHRASE}中…第 ${retryTick} 轮`
+      : "生成中…";
 
   return (
     <main className="relative mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 pb-28 pt-6 sm:px-6 sm:pb-16 sm:pt-10">
@@ -287,9 +357,48 @@ export default function Home() {
         </div>
         <button
           type="button"
+          role="switch"
+          aria-checked={autoRetry}
+          aria-label={`${AUTO_RETRY_DISPLAY}：失败自动重试直到成功`}
+          title="开：生成失败就自动再搓，直到过检（最多 12 轮）"
+          onClick={() => setAutoRetryOn(!autoRetry)}
+          className={[
+            "mt-4 flex w-full items-center justify-between gap-3 rounded-md border-2 px-3 py-2.5 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime",
+            autoRetry
+              ? "border-lime bg-lime/15 text-lime shadow-[0_3px_0_0_rgba(57,255,20,0.35)]"
+              : "border-stroke bg-ink text-mute hover:border-lime/60 hover:text-lime",
+          ].join(" ")}
+        >
+          <span className="min-w-0">
+            <span className="block font-body text-[17px] font-black tracking-wide sm:text-lg">
+              {AUTO_RETRY_DISPLAY}
+            </span>
+            <span className="mt-0.5 block text-[11px] leading-snug opacity-80">
+              {autoRetry
+                ? "已开 · 失败会一直硬造到过检"
+                : "点开 · 失败自动重试直到成功"}
+            </span>
+          </span>
+          <span
+            aria-hidden
+            className={[
+              "relative h-7 w-12 shrink-0 rounded-full border transition",
+              autoRetry ? "border-lime bg-lime" : "border-stroke bg-panel-2",
+            ].join(" ")}
+          >
+            <span
+              className={[
+                "absolute top-0.5 h-5 w-5 rounded-full bg-ink transition",
+                autoRetry ? "left-6" : "left-0.5",
+              ].join(" ")}
+            />
+          </span>
+        </button>
+        <button
+          type="button"
           disabled={loading}
           onClick={() => void generate()}
-          className="mt-4 hidden w-full rounded-md border-2 border-magenta bg-magenta/15 py-3 font-body text-base font-bold text-magenta transition hover:bg-magenta hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta disabled:cursor-wait disabled:opacity-60 sm:block"
+          className="mt-3 hidden w-full rounded-md border-2 border-magenta bg-magenta/15 py-3 font-body text-base font-bold text-magenta transition hover:bg-magenta hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta disabled:cursor-wait disabled:opacity-60 sm:block"
         >
           {loading
             ? loadingLabel
