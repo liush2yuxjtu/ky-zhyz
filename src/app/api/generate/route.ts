@@ -85,9 +85,6 @@ export async function POST(req: Request) {
             name: match.topic.name,
             note: match.topic.note,
             phrase: match.topic.phrase,
-            matchedKeywords: match.matchedKeywords,
-            via: match.via,
-            score: match.score,
             memeSrc: memeSrc(match.topic),
           },
         });

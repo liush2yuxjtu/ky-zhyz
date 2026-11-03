@@ -1,27 +1,24 @@
 "use client";
 
 import { useEffect } from "react";
-import type { TopicMatch } from "@/lib/topics";
-import { memeSrc } from "@/lib/topics";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   phrase: string;
-  match: TopicMatch | null;
+  title: string;
+  memeSrc: string;
+  note?: string;
 };
 
-export function MemePop({ open, onClose, phrase, match }: Props) {
+export function MemePop({ open, onClose, phrase, title, memeSrc, note }: Props) {
   useEffect(() => {
     if (!open) return;
     const t = window.setTimeout(onClose, 3200);
     return () => window.clearTimeout(t);
-  }, [open, onClose, phrase, match?.topic.id]);
+  }, [open, onClose, phrase, title, memeSrc]);
 
-  if (!open || !match) return null;
-
-  const src = memeSrc(match.topic);
-  const title = match.topic.name;
+  if (!open || !memeSrc) return null;
 
   return (
     <div
@@ -34,20 +31,22 @@ export function MemePop({ open, onClose, phrase, match }: Props) {
         className="meme-burst relative w-full max-w-sm rounded-lg border-2 border-magenta bg-panel p-3 shadow-[0_0_40px_rgba(255,43,214,0.45)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="mb-2 text-center font-mono text-[10px] text-mute">
-          {title}
-        </p>
+        {title ? (
+          <p className="mb-2 text-center font-mono text-[10px] text-mute">
+            {title}
+          </p>
+        ) : null}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={src}
-          alt={title}
+          src={memeSrc}
+          alt={title || phrase}
           className="mx-auto max-h-56 w-auto rounded object-contain"
         />
         <p className="mt-3 text-center font-body text-xl font-black text-magenta">
           {phrase}
         </p>
-        {match.topic.note ? (
-          <p className="mt-1 text-center text-xs text-mute">{match.topic.note}</p>
+        {note ? (
+          <p className="mt-1 text-center text-xs text-mute">{note}</p>
         ) : null}
         <button
           type="button"

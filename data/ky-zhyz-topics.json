@@ -22,10 +22,10 @@
   "fallbackId": "generic-abstract",
   "fallback": {
     "id": "generic-abstract",
-    "name": "抽象现场（兜底）",
+    "name": "抽象现场",
     "phrase": "狂野震撼亚洲",
     "keywords": [],
-    "note": "无关键词命中时用通用斗图表情",
+    "note": "通用斗图表情",
     "meme": {
       "path": "/memes/pepe_raise.png",
       "url": "https://zhaoolee.com/ChineseBQB/media/9e232f8ca3c27c700b2721ac8c64a6de5f3e04fe62960b6de77956a98c4916f8.jpg",
@@ -1123,7 +1123,7 @@
         "nvidia",
         "皮衣"
       ],
-      "note": "ChineseBQB有专题",
+      "note": "相关表情",
       "meme": {
         "path": "/memes/good_news.jpg",
         "url": "https://zhaoolee.com/ChineseBQB/media/d3d01e786a514fdd6e0bd315200eaec8a194d4d21d788155f2715c11ee19a19d.jpg",

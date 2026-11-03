@@ -4,16 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { MemePop } from "@/components/MemePop";
 import { SlotBoard } from "@/components/SlotBoard";
 import type { CharVerdict, ValidationResult } from "@/lib/validator";
-import { matchTopic, type TopicMatch } from "@/lib/topics";
 
 type TopicPayload = {
   id: string;
   name: string;
   note: string;
   phrase: string;
-  matchedKeywords: string[];
-  via: "keyword" | "fallback";
-  score: number;
   memeSrc: string;
 };
 
@@ -48,26 +44,6 @@ const EXAMPLES = [
   "老板雷军发布会又 are you ok",
   "论文被审稿人批到体无完肤",
 ];
-
-function topicFromPayload(t?: TopicPayload): TopicMatch | null {
-  if (!t) return null;
-  return {
-    topic: {
-      id: t.id,
-      name: t.name,
-      phrase: t.phrase,
-      keywords: t.matchedKeywords,
-      note: t.note,
-      meme: {
-        url: t.memeSrc,
-        path: t.memeSrc.startsWith("/") ? t.memeSrc : undefined,
-      },
-    },
-    score: t.score,
-    matchedKeywords: t.matchedKeywords,
-    via: t.via,
-  };
-}
 
 async function readGenerateStream(
   res: Response,
@@ -128,7 +104,9 @@ export default function Home() {
   const [gloss, setGloss] = useState("");
   const [slots, setSlots] = useState<CharVerdict[] | undefined>();
   const [memeOpen, setMemeOpen] = useState(false);
-  const [topicMatch, setTopicMatch] = useState<TopicMatch | null>(null);
+  const [memeTitle, setMemeTitle] = useState("");
+  const [memeSrc, setMemeSrc] = useState("");
+  const [memeNote, setMemeNote] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -149,7 +127,9 @@ export default function Home() {
       setDisplay("");
       setGloss("");
       setSlots(undefined);
-      setTopicMatch(null);
+      setMemeTitle("");
+      setMemeSrc("");
+      setMemeNote("");
       setProgressN(0);
       setProgressMax(5);
 
@@ -163,7 +143,6 @@ export default function Home() {
           body: JSON.stringify({ scene: text }),
         });
 
-        // Non-stream JSON error (400/500 before stream starts)
         const ct = res.headers.get("content-type") ?? "";
         if (ct.includes("application/json")) {
           const data = (await res.json()) as ApiFail;
@@ -180,20 +159,19 @@ export default function Home() {
           setDisplay(data.display);
           setGloss(data.gloss);
           setSlots(data.validation.slots);
-          setTopicMatch(
-            topicFromPayload(data.topic) ??
-              matchTopic({
-                scene: text,
-                phrase: data.phrase,
-                gloss: data.gloss,
-              }),
-          );
+          if (data.topic?.memeSrc) {
+            setMemeTitle(data.topic.name || "");
+            setMemeSrc(data.topic.memeSrc);
+            setMemeNote(data.topic.note || "");
+          }
           // Do NOT auto-open meme — show board first
         } else {
           setDisplay("");
           setGloss("");
           setSlots(undefined);
-          setTopicMatch(null);
+          setMemeTitle("");
+          setMemeSrc("");
+          setMemeNote("");
           setError(
             (!data.ok && data.error) ||
               "这波没凑齐 ky,zhyz，点一下再试一次就好。",
@@ -211,6 +189,7 @@ export default function Home() {
   );
 
   const showResult = Boolean(slots) && !loading;
+  const canMeme = Boolean(memeSrc);
   const loadingLabel =
     progressN > 0
       ? `生成中… 第 ${progressN} 次`
@@ -302,9 +281,9 @@ export default function Home() {
               {display && (
                 <button
                   type="button"
-                  onClick={() => topicMatch && setMemeOpen(true)}
+                  onClick={() => canMeme && setMemeOpen(true)}
                   className="mt-5 block w-full text-center font-body text-3xl font-black tracking-wide text-magenta transition hover:brightness-110 sm:text-4xl"
-                  title={topicMatch ? "点开梗图" : undefined}
+                  title={canMeme ? "点开梗图" : undefined}
                 >
                   {display}
                 </button>
@@ -312,7 +291,7 @@ export default function Home() {
               {gloss && (
                 <p className="mt-2 text-center text-sm text-mute">{gloss}</p>
               )}
-              {topicMatch && (
+              {canMeme && (
                 <div className="mt-4 flex justify-center">
                   <button
                     type="button"
@@ -336,7 +315,9 @@ export default function Home() {
         open={memeOpen}
         onClose={() => setMemeOpen(false)}
         phrase={display}
-        match={topicMatch}
+        title={memeTitle}
+        memeSrc={memeSrc}
+        note={memeNote}
       />
     </main>
   );
