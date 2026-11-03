@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Press_Start_2P, Noto_Sans_SC, IBM_Plex_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -28,12 +28,16 @@ const mono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "ky,zhyz — 场景翻译机",
   description: "丢一句场景，吐出恰好六个汉字的 ky,zhyz 翻译。",
-  themeColor: "#050508",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "ky,zhyz",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#050508",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({

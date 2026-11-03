@@ -45,16 +45,16 @@ export function SlotBoard({
               <span
                 className={[
                   "font-body text-3xl font-black sm:text-4xl",
-                  show ? (isLocked ? "text-magenta" : "text-lime") : "text-stroke",
+                  show ? "text-lime" : "text-mute/40",
                 ].join(" ")}
               >
-                {show ? char : "·"}
+                {show ? char : ""}
               </span>
               <span className="mt-1 font-mono text-[10px] tabular-nums text-mute">
                 {label}
               </span>
               {isLocked && (
-                <span className="absolute right-1 top-1 text-[9px] font-bold text-magenta">
+                <span className="absolute right-1 top-1 rounded bg-warn/20 px-0.5 text-[9px] font-bold text-warn">
                   锁
                 </span>
               )}
@@ -64,10 +64,10 @@ export function SlotBoard({
             "relative flex aspect-square w-full flex-col items-center justify-center rounded-md border-2 bg-panel-2",
             show && filled ? "slot-fill" : "",
             isLocked
-              ? "border-magenta shadow-[0_4px_16px_rgba(255,43,214,0.35)]"
+              ? "border-warn/80 shadow-[inset_0_0_0_1px_rgba(255,184,0,0.35)]"
               : show
                 ? "border-lime shadow-[0_4px_16px_rgba(57,255,20,0.28)]"
-                : "border-stroke border-dashed",
+                : "border-stroke",
           ].join(" ");
 
           return (
@@ -91,7 +91,7 @@ export function SlotBoard({
                   onClick={() => onToggleLock?.(i)}
                   className={[
                     boxClass,
-                    "transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta disabled:opacity-60",
+                    "transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warn disabled:opacity-60",
                   ].join(" ")}
                 >
                   {inner}
