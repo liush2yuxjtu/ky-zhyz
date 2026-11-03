@@ -103,6 +103,8 @@ export default function Home() {
   const [memeSrc, setMemeSrc] = useState("");
   const [memeNote, setMemeNote] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  /** Session phrases to push as avoid on re-generate (same or any scene). */
+  const recentPhrasesRef = useRef<string[]>([]);
 
   useEffect(() => {
     textareaRef.current?.focus();
@@ -137,7 +139,10 @@ export default function Home() {
             "Content-Type": "application/json",
             Accept: "text/event-stream",
           },
-          body: JSON.stringify({ scene: text }),
+          body: JSON.stringify({
+            scene: text,
+            avoid: recentPhrasesRef.current.slice(-8),
+          }),
         });
 
         const ct = res.headers.get("content-type") ?? "";
@@ -156,6 +161,13 @@ export default function Home() {
           track("generate_success", {
             attempts: typeof data.attempts === "number" ? data.attempts : 0,
           });
+          if (typeof data.phrase === "string" && data.phrase) {
+            const next = [
+              ...recentPhrasesRef.current.filter((p) => p !== data.phrase),
+              data.phrase,
+            ];
+            recentPhrasesRef.current = next.slice(-8);
+          }
           setDisplay(data.display);
           setGloss(data.gloss);
           setSlots(data.validation.slots);

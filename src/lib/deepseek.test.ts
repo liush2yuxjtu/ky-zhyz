@@ -3,6 +3,7 @@ import {
   EXHAUSTED_ERROR,
   MAX_ATTEMPTS,
   describeFail,
+  sanitizeAvoid,
   type GenerateFail,
   type GenerateOk,
 } from "./deepseek";
@@ -48,5 +49,21 @@ describe("generate contract (PASS-only to client)", () => {
     expect(fail).not.toHaveProperty("validation");
     expect(fail).not.toHaveProperty("lastPhrase");
     expect(fail).not.toHaveProperty("display");
+  });
+});
+
+describe("sanitizeAvoid", () => {
+  it("keeps only exact 6-han phrases, deduped, max 8", () => {
+    expect(
+      sanitizeAvoid([
+        "坑友这黑又栽",
+        "坑友这黑又栽",
+        "abc",
+        "七个汉字啊太多了",
+        "狂野震撼亚洲",
+        123,
+        null,
+      ]),
+    ).toEqual(["坑友这黑又栽", "狂野震撼亚洲"]);
   });
 });
