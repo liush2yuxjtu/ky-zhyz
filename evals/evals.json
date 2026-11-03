@@ -968,6 +968,51 @@
       },
       "notes": "野火 https://www.yehuowiki.com/meme/457/",
       "slug": "gt-keyi-yezhung"
+    },
+    {
+      "id": 37,
+      "name": "gt-砍勇最会游走",
+      "prompt": "复述评论区变体：砍勇最会游走（第三字「最」为 z 声母，规则接受）",
+      "expected_output": "砍勇最会游走",
+      "ground_truth_phrases": [
+        "砍勇最会游走"
+      ],
+      "expectations": [
+        "phrase equals 砍勇最会游走 (ignore punctuation)",
+        "pinyin slots pass (slot3 z or zh)",
+        "attempts === 1 when generation succeeds"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "ground_truth_phrases": [
+          "砍勇最会游走"
+        ],
+        "expected_meme": "lebron"
+      },
+      "notes": "NGA/社区变体；第3格「最」=zui，z 算过",
+      "slug": "gt-kanyong-zuihuiyouzou"
+    },
+    {
+      "id": 38,
+      "name": "gt-刊用最会游走",
+      "prompt": "复述评论区变体：刊用最会游走（第3格「最」=z）",
+      "expected_output": "刊用最会游走",
+      "ground_truth_phrases": [
+        "刊用最会游走"
+      ],
+      "expectations": [
+        "phrase equals 刊用最会游走 (ignore punctuation)",
+        "pinyin slots pass (slot3 z or zh)"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "ground_truth_phrases": [
+          "刊用最会游走"
+        ],
+        "expected_meme": "lebron"
+      },
+      "notes": "社区变体；与砍勇同结构",
+      "slug": "gt-kanyong-kanyong-youzou"
     }
   ]
 }

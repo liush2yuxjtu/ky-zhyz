@@ -8,12 +8,16 @@ import {
 } from "./validator";
 
 describe("syllableMatchesNeed", () => {
-  it("zh slot needs digraph zh", () => {
+  it("3rd slot (need zh): z OR zh both PASS", () => {
     expect(syllableMatchesNeed("zhen", "zh")).toBe(true);
     expect(syllableMatchesNeed("zhe", "zh")).toBe(true);
     expect(syllableMatchesNeed("zhou", "zh")).toBe(true);
-    expect(syllableMatchesNeed("za", "zh")).toBe(false);
-    expect(syllableMatchesNeed("z", "zh")).toBe(false);
+    expect(syllableMatchesNeed("za", "zh")).toBe(true);
+    expect(syllableMatchesNeed("zai", "zh")).toBe(true);
+    expect(syllableMatchesNeed("zui", "zh")).toBe(true);
+    expect(syllableMatchesNeed("z", "zh")).toBe(true);
+    expect(syllableMatchesNeed("chi", "zh")).toBe(false);
+    expect(syllableMatchesNeed("shi", "zh")).toBe(false);
   });
 
   it("z slot: zhou/zhong PASS (start with z); never require initial===z", () => {
@@ -70,11 +74,18 @@ describe("validateKyZhyz", () => {
     expect(r.pass).toBe(true);
   });
 
-  it("zai does not satisfy zh slot", () => {
-    expect(syllableMatchesNeed("zai", "zh")).toBe(false);
-    // 可/以/在/很/野/种 — 在 is zài, not zh
+  it("zai/zui satisfy 3rd slot (z counts as zh brand)", () => {
+    expect(syllableMatchesNeed("zai", "zh")).toBe(true);
     const r = validateKyZhyz("可以在很野种");
     expect(r.slots[2].char).toBe("在");
-    expect(r.slots[2].pass).toBe(false);
+    expect(r.slots[2].pass).toBe(true);
+    expect(r.pass).toBe(true);
+  });
+
+  it("passes community 砍勇最会游走 (最=zui on slot 3)", () => {
+    const r = validateKyZhyz("砍勇最会游走");
+    expect(r.slots[2].char).toBe("最");
+    expect(r.slots[2].pass).toBe(true);
+    expect(r.pass).toBe(true);
   });
 });

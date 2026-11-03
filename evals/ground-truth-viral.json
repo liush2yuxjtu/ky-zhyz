@@ -1,5 +1,5 @@
 {
-  "description": "Attested ky,zhyz viral phrases from Chinese community explainers/comments. Only validator-PASS phrases are gold; rejected listed for transparency.",
+  "description": "Attested ky,zhyz viral phrases from Chinese community explainers/comments. Slot3 accepts z OR zh. Only validator-PASS phrases are gold; rejected listed for transparency.",
   "sources": [
     "https://ngabbs.com/read.php?tid=44327182",
     "https://bbs.nga.cn/read.php?tid=41594047",
@@ -153,17 +153,46 @@
         "exact_gt": true
       },
       "notes": "野火 https://www.yehuowiki.com/meme/457/"
+    },
+    {
+      "id": "gt-kanyong-zuihuiyouzou",
+      "name": "gt-砍勇最会游走",
+      "prompt": "复述评论区变体：砍勇最会游走（第三字「最」为 z 声母，规则接受）",
+      "expected_output": "砍勇最会游走",
+      "ground_truth_phrases": [
+        "砍勇最会游走"
+      ],
+      "expectations": [
+        "phrase equals 砍勇最会游走 (ignore punctuation)",
+        "pinyin slots pass (slot3 z or zh)",
+        "attempts === 1 when generation succeeds"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "expected_meme": "lebron"
+      },
+      "notes": "NGA/社区变体；第3格「最」=zui，z 算过"
+    },
+    {
+      "id": "gt-kanyong-kanyong-youzou",
+      "name": "gt-刊用最会游走",
+      "prompt": "复述评论区变体：刊用最会游走（第3格「最」=z）",
+      "expected_output": "刊用最会游走",
+      "ground_truth_phrases": [
+        "刊用最会游走"
+      ],
+      "expectations": [
+        "phrase equals 刊用最会游走 (ignore punctuation)",
+        "pinyin slots pass (slot3 z or zh)"
+      ],
+      "checks": {
+        "exact_gt": true,
+        "expected_meme": "lebron"
+      },
+      "notes": "社区变体；与砍勇同结构"
     }
   ],
   "rejected_community_variants": [
-    {
-      "phrase": "砍勇最会游走",
-      "reason": "第3字最=z 非 zh；社区常用但非严格 ky,zhyz",
-      "sources": [
-        "贴吧9024047195",
-        "NGA"
-      ]
-    },
     {
       "phrase": "刊用最会打野",
       "reason": "声母不合",

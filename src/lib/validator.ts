@@ -50,7 +50,8 @@ export function normalizeInitial(raw: string): string {
 /**
  * Slot match on a tone-stripped syllable (or an initial string).
  *
- * - need `zh` (3rd slot): bare must start with digraph `zh` (zhen/zhe/zhou…)
+ * - need `zh` (3rd slot): Z or ZH both PASS (zai/zui/zhe/zhou…) — community
+ *   e.g. 砍勇最会游走 where 最=zui.
  * - need single letter incl. `z` (6th): bare must start with that letter
  *   → `zhou` / `zhong` PASS the final z slot (they start with z)
  *
@@ -63,7 +64,8 @@ export function syllableMatchesNeed(
 ): boolean {
   const bare = bareSyllable(bareOrInitial);
   if (!bare) return false;
-  if (need === "zh") return bare.startsWith("zh");
+  // 3rd slot branded "zh": accept plain z as well as digraph zh
+  if (need === "zh") return bare.startsWith("z");
   return bare.startsWith(need);
 }
 

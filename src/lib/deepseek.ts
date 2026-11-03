@@ -49,9 +49,9 @@ export const SYSTEM = SYSTEM_PROMPT;
 
 function buildUser(scene: string, repair?: string): string {
   if (!repair) {
-    return `场景：${scene}\n一次性输出合格 JSON。先按六格选字（优先口播表+合法锚点），默念 k-y-zh-h-y-z，再交卷。不会重试。`;
+    return `场景：${scene}\n一次性输出合格 JSON。先按六格选字（优先口播表+合法锚点），默念 k-y-(z|zh)-h-y-z，再交卷。不会重试。`;
   }
-  return `场景：${scene}\n上一版有格子首字母不合 ky,zhyz，已交回生成器：${repair}\n请输出新的 6 字 JSON，务必凑齐 k/y/zh/h/y/z。`;
+  return `场景：${scene}\n上一版有格子首字母不合 ky,zhyz，已交回生成器：${repair}\n请输出新的 6 字 JSON，务必凑齐 k/y/(z|zh)/h/y/z。`;
 }
 
 function parseModelContent(content: string): ModelJson {
@@ -114,7 +114,7 @@ export function describeFail(v: ValidationResult): string {
       const got =
         (s.bares && s.bares.length ? s.bares.join("/") : s.initials.join("/")) ||
         "无读音";
-      return `第${s.index + 1}格「${s.char}」首字母不合 ky,zhyz：读音[${got}]，要求以[${s.expected}]开头（z 格：zhou/zhong 算过）`;
+      return `第${s.index + 1}格「${s.char}」首字母不合 ky,zhyz：读音[${got}]，要求以[${s.expected}]开头（第3格 z/zh 均可；末格 zhou/zhong 算过）`;
     });
   return (
     "以下格子首字母不合 ky,zhyz，请交回生成器重写整句（不要解释，只出新 JSON）：" +
