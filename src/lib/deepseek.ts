@@ -30,6 +30,11 @@ export type GenerateFail = {
 
 export type GenerateResult = GenerateOk | GenerateFail;
 
+export type AttemptProgress = {
+  attempt: number;
+  maxAttempts: number;
+};
+
 type ModelJson = { phrase?: string; gloss?: string };
 
 const SYSTEM = `你是「ky,zhyz」造句机。用户会描述一个场景/情绪/吐槽，你必须把它翻译成恰好 6 个汉字，拼音声母严格对应：
@@ -125,14 +130,17 @@ export const EXHAUSTED_ERROR =
 /**
  * Always validate. On fail, silently regenerate with failing-slot feedback
  * until PASS or MAX_ATTEMPTS. Failures never return phrase/slots to the client.
+ * onProgress fires at the start of each attempt (no fail slots leaked).
  */
 export async function generateKyZhyz(
   scene: string,
   apiKey: string,
+  onProgress?: (e: AttemptProgress) => void,
 ): Promise<GenerateResult> {
   let repair: string | undefined;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    onProgress?.({ attempt, maxAttempts: MAX_ATTEMPTS });
     const { phrase, gloss } = await callDeepSeek(apiKey, scene, repair);
     const validation = validateKyZhyz(phrase);
 

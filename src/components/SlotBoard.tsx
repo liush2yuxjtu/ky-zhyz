@@ -16,7 +16,7 @@ export function SlotBoard({ slots, filled }: Props) {
     <div className="w-full">
       <div className="mb-3 flex items-end justify-between gap-3">
         <p className="font-mono text-[11px] tracking-widest text-mute">
-          已过检 · k y · zh h y z
+          六字已齐
         </p>
         <p className="font-display text-[10px] leading-none text-magenta">
           ky,zhyz
@@ -56,11 +56,6 @@ export function SlotBoard({ slots, filled }: Props) {
                   {label}
                 </span>
               </div>
-              {show && slot && (
-                <p className="mt-1 truncate text-center font-mono text-[10px] text-mute">
-                  {slot.readings.slice(0, 2).join("/")}
-                </p>
-              )}
             </div>
           );
         })}

@@ -22,27 +22,20 @@ export function MemePop({ open, onClose, phrase, match }: Props) {
 
   const src = memeSrc(match.topic);
   const title = match.topic.name;
-  const via =
-    match.via === "keyword"
-      ? `命中：${match.matchedKeywords.slice(0, 4).join(" · ")}`
-      : "未命中人物词表 · 兜底表情";
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
       role="dialog"
-      aria-label="梗图触发"
+      aria-label="梗图"
       onClick={onClose}
     >
       <div
         className="meme-burst relative w-full max-w-sm rounded-lg border-2 border-magenta bg-panel p-3 shadow-[0_0_40px_rgba(255,43,214,0.45)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="mb-1 text-center font-display text-[11px] text-lime">
-          PASS
-        </p>
         <p className="mb-2 text-center font-mono text-[10px] text-mute">
-          {title} · {via}
+          {title}
         </p>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -53,7 +46,9 @@ export function MemePop({ open, onClose, phrase, match }: Props) {
         <p className="mt-3 text-center font-body text-xl font-black text-magenta">
           {phrase}
         </p>
-        <p className="mt-1 text-center text-xs text-mute">{match.topic.note}</p>
+        {match.topic.note ? (
+          <p className="mt-1 text-center text-xs text-mute">{match.topic.note}</p>
+        ) : null}
         <button
           type="button"
           onClick={onClose}

@@ -18,6 +18,7 @@ type TopicPayload = {
 };
 
 type ApiOk = {
+  type?: "result";
   ok: true;
   phrase: string;
   display: string;
@@ -28,10 +29,17 @@ type ApiOk = {
 };
 
 type ApiFail = {
+  type?: "result";
   ok: false;
   error: string;
   attempts?: number;
 };
+
+type StreamEvent =
+  | { type: "start"; maxAttempts: number }
+  | { type: "attempt"; n: number; max: number }
+  | (ApiOk & { type: "result" })
+  | (ApiFail & { type: "result" });
 
 const EXAMPLES = [
   "詹皇又甩锅还说队友不懂球",
@@ -61,14 +69,64 @@ function topicFromPayload(t?: TopicPayload): TopicMatch | null {
   };
 }
 
+async function readGenerateStream(
+  res: Response,
+  onAttempt: (n: number, max: number) => void,
+): Promise<ApiOk | ApiFail> {
+  if (!res.body) {
+    return { ok: false, error: "网络挂了，再点一次" };
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let final: ApiOk | ApiFail | null = null;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    const chunks = buffer.split("\n\n");
+    buffer = chunks.pop() ?? "";
+
+    for (const chunk of chunks) {
+      const line = chunk
+        .split("\n")
+        .map((l) => l.trim())
+        .find((l) => l.startsWith("data:"));
+      if (!line) continue;
+      const raw = line.slice(5).trim();
+      if (!raw) continue;
+      let evt: StreamEvent;
+      try {
+        evt = JSON.parse(raw) as StreamEvent;
+      } catch {
+        continue;
+      }
+      if (evt.type === "attempt") {
+        onAttempt(evt.n, evt.max);
+      } else if (evt.type === "start") {
+        onAttempt(0, evt.maxAttempts);
+      } else if (evt.type === "result") {
+        final = evt;
+      }
+    }
+  }
+
+  if (final) return final;
+  return { ok: false, error: "这波没凑齐 ky,zhyz，点一下再试一次就好。" };
+}
+
 export default function Home() {
   const [scene, setScene] = useState("");
   const [loading, setLoading] = useState(false);
+  const [progressN, setProgressN] = useState(0);
+  const [progressMax, setProgressMax] = useState(5);
   const [error, setError] = useState<string | null>(null);
   const [display, setDisplay] = useState("");
   const [gloss, setGloss] = useState("");
   const [slots, setSlots] = useState<CharVerdict[] | undefined>();
-  const [attempts, setAttempts] = useState(0);
   const [memeOpen, setMemeOpen] = useState(false);
   const [topicMatch, setTopicMatch] = useState<TopicMatch | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -88,21 +146,35 @@ export default function Home() {
       setLoading(true);
       setError(null);
       setMemeOpen(false);
-      // Clear previous PASS while looping — never flash fail slots
       setDisplay("");
       setGloss("");
       setSlots(undefined);
       setTopicMatch(null);
-      setAttempts(0);
+      setProgressN(0);
+      setProgressMax(5);
 
       try {
         const res = await fetch("/api/generate", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "text/event-stream",
+          },
           body: JSON.stringify({ scene: text }),
         });
-        const data = (await res.json()) as ApiOk | ApiFail;
-        setAttempts(data.attempts ?? 0);
+
+        // Non-stream JSON error (400/500 before stream starts)
+        const ct = res.headers.get("content-type") ?? "";
+        if (ct.includes("application/json")) {
+          const data = (await res.json()) as ApiFail;
+          setError(data.error || "生成出了点岔子，再试一次。");
+          return;
+        }
+
+        const data = await readGenerateStream(res, (n, max) => {
+          setProgressN(n);
+          setProgressMax(max);
+        });
 
         if (data.ok && data.validation?.pass) {
           setDisplay(data.display);
@@ -116,7 +188,7 @@ export default function Home() {
                 gloss: data.gloss,
               }),
           );
-          setMemeOpen(true);
+          // Do NOT auto-open meme — show board first
         } else {
           setDisplay("");
           setGloss("");
@@ -139,6 +211,10 @@ export default function Home() {
   );
 
   const showResult = Boolean(slots) && !loading;
+  const loadingLabel =
+    progressN > 0
+      ? `生成中… 第 ${progressN} 次`
+      : `服务端静默凑齐中（最多 ${progressMax} 次）`;
 
   return (
     <main className="relative mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 pb-28 pt-6 sm:px-6 sm:pb-16 sm:pt-10">
@@ -149,11 +225,10 @@ export default function Home() {
           <span className="text-lime">zhyz</span>
         </h1>
         <p className="mt-2 text-[13px] leading-snug text-mute sm:text-sm">
-          丢场景 → 服务端静默凑齐六字 → 你只看到过检答案
+          丢场景 → 吐出六字 ky,zhyz
         </p>
       </header>
 
-      {/* 1) Input first — above the fold */}
       <section className="rounded-lg border border-stroke bg-panel p-4 sm:p-5">
         <label
           htmlFor="scene"
@@ -194,7 +269,7 @@ export default function Home() {
           onClick={() => void generate()}
           className="mt-4 hidden w-full rounded-md border-2 border-magenta bg-magenta/15 py-3 font-body text-base font-bold text-magenta transition hover:bg-magenta hover:text-ink disabled:cursor-wait disabled:opacity-60 sm:block"
         >
-          {loading ? "生成中…" : "翻译成 ky,zhyz"}
+          {loading ? loadingLabel : "翻译成 ky,zhyz"}
         </button>
         {error && !loading && (
           <p className="mt-3 rounded border border-warn/40 bg-warn/10 px-3 py-2 text-sm text-warn">
@@ -203,7 +278,6 @@ export default function Home() {
         )}
       </section>
 
-      {/* Sticky CTA on mobile */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stroke bg-ink/95 p-3 backdrop-blur sm:hidden">
         <button
           type="button"
@@ -211,84 +285,51 @@ export default function Home() {
           onClick={() => void generate()}
           className="w-full rounded-md border-2 border-magenta bg-magenta/20 py-3 font-body text-base font-bold text-magenta disabled:cursor-wait disabled:opacity-60"
         >
-          {loading ? "生成中…" : "翻译成 ky,zhyz"}
+          {loading ? loadingLabel : "翻译成 ky,zhyz"}
         </button>
       </div>
 
-      {/* 2) Result only after PASS (or compact loading) */}
       {(loading || showResult) && (
         <section className="mt-6 rounded-lg border border-stroke bg-panel/90 p-4 shadow-[inset_0_0_0_1px_rgba(255,43,214,0.08)] sm:p-6">
           {loading && (
             <p className="py-6 text-center font-mono text-sm text-magenta animate-pulse">
-              生成中…
+              {loadingLabel}
             </p>
           )}
           {showResult && (
             <>
               <SlotBoard slots={slots} filled />
               {display && (
-                <p className="mt-5 text-center font-body text-3xl font-black tracking-wide text-magenta sm:text-4xl">
+                <button
+                  type="button"
+                  onClick={() => topicMatch && setMemeOpen(true)}
+                  className="mt-5 block w-full text-center font-body text-3xl font-black tracking-wide text-magenta transition hover:brightness-110 sm:text-4xl"
+                  title={topicMatch ? "点开梗图" : undefined}
+                >
                   {display}
-                </p>
+                </button>
               )}
               {gloss && (
                 <p className="mt-2 text-center text-sm text-mute">{gloss}</p>
               )}
               {topicMatch && (
-                <p className="mt-2 text-center font-mono text-[11px] text-lime/80">
-                  主题 · {topicMatch.topic.name}
-                  {topicMatch.via === "keyword"
-                    ? ` · 词：${topicMatch.matchedKeywords.slice(0, 3).join("/")}`
-                    : " · 兜底"}
-                </p>
-              )}
-              {attempts > 0 && (
-                <p className="mt-1 text-center font-mono text-[10px] text-mute">
-                  已过检 · 内部尝试 {attempts} 次
-                </p>
+                <div className="mt-4 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setMemeOpen(true)}
+                    className="rounded-full border border-lime/50 bg-lime/10 px-4 py-2 font-body text-sm font-bold text-lime transition hover:bg-lime hover:text-ink"
+                  >
+                    看梗图
+                  </button>
+                </div>
               )}
             </>
           )}
         </section>
       )}
 
-      {showResult && slots && (
-        <section className="mt-6 overflow-hidden rounded-lg border border-stroke">
-          <div className="border-b border-stroke bg-panel-2 px-4 py-2 font-mono text-[11px] text-mute">
-            已过检 · 六格首字母均合 ky,zhyz（多音字任一读音命中）
-          </div>
-          <ul className="divide-y divide-stroke bg-panel">
-            {slots.map((s) => (
-              <li
-                key={s.index}
-                className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3 text-sm"
-              >
-                <span className="font-mono text-mute">#{s.index + 1}</span>
-                <span className="text-lg font-bold">{s.char}</span>
-                <span className="font-mono text-xs text-mute">{s.expected}</span>
-                <span className="font-mono text-xs text-text/80">
-                  [{(s.bares ?? s.initials).join(" · ") || "—"}]
-                </span>
-                <span className="text-xs text-mute">
-                  {s.readings.join(" / ")}
-                </span>
-                <span className="ml-auto font-display text-[10px] text-lime">
-                  合
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <footer className="mt-10 border-t border-stroke pt-5 font-mono text-[10px] leading-relaxed text-mute">
-        <p>
-          表情：MemeCrafters/meme-generator（MIT）本地包 + ChineseBQB
-          远程备份。人物词表 100 条见 /data/ky-zhyz-topics.json。
-        </p>
-        <p className="mt-1">
-          deepseek-chat · 无 reasoner · 服务端静默重试至过检
-        </p>
+      <footer className="mt-10 border-t border-stroke pt-5 text-center text-[11px] text-mute">
+        梗图来自社区表情包，非 AI 生成
       </footer>
 
       <MemePop
