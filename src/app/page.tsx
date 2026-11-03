@@ -3,7 +3,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { track } from "@vercel/analytics";
 import { MemePop } from "@/components/MemePop";
+import { ShareBar } from "@/components/ShareBar";
 import { SlotBoard } from "@/components/SlotBoard";
+import {
+  markFromShare,
+  parseInviteLanding,
+  consumeFromShare,
+  shouldFireInviteLand,
+  SITE_HOST,
+  SITE_URL,
+} from "@/lib/share";
 import type { CharVerdict, ValidationResult } from "@/lib/validator";
 
 type TopicPayload = {
@@ -144,6 +153,31 @@ export default function Home() {
 
   useEffect(() => {
     textareaRef.current?.focus();
+  }, []);
+
+  // Share-loop landing: invite_land once per tab session when UTM/sharer_id present.
+  useEffect(() => {
+    try {
+      const landing = parseInviteLanding(
+        window.location.search,
+        window.location.pathname,
+      );
+      if (!landing) return;
+      const key = `${landing.utm_source}|${landing.utm_medium}|${landing.sharer_id}|${landing.landing_path}`;
+      if (!shouldFireInviteLand(key)) {
+        markFromShare(landing);
+        return;
+      }
+      markFromShare(landing);
+      track("invite_land", {
+        sharer_id: landing.sharer_id || "",
+        utm_source: landing.utm_source,
+        utm_medium: landing.utm_medium,
+        landing_path: landing.landing_path,
+      });
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   useEffect(() => {
@@ -303,6 +337,14 @@ export default function Home() {
               round,
               auto_retry: autoRetryRef.current ? 1 : 0,
             });
+            // First success after a share landing → growth loop conversion.
+            const fromShare = consumeFromShare();
+            if (fromShare) {
+              track("new_generate", {
+                sharer_id: fromShare.sharer_id || "",
+                from_share: true,
+              });
+            }
             if (typeof data.phrase === "string" && data.phrase) {
               const next = [
                 ...recentPhrasesRef.current.filter((p) => p !== data.phrase),
@@ -567,7 +609,7 @@ export default function Home() {
         <section
           aria-live="polite"
           aria-busy={loading}
-          className="mt-6 rounded-lg border border-stroke bg-panel/90 p-4 sm:p-6"
+          className="relative mt-6 overflow-hidden rounded-lg border border-stroke bg-panel/90 p-4 sm:p-6"
         >
           {loading && !showResult && (
             <div className="py-6 text-center">
@@ -680,6 +722,32 @@ export default function Home() {
                   </button>
                 </div>
               )}
+              {/* Nikita watermark: brand + URL on the most-screenshotted result view */}
+              <div
+                className="mt-5 flex flex-col items-center gap-0.5 border-t border-stroke/80 pt-3"
+                data-watermark="ky-zhyz"
+              >
+                <p className="font-display text-[10px] leading-none text-magenta">
+                  ky<span className="text-mute">,</span>
+                  <span className="text-lime">zhyz</span>
+                </p>
+                <a
+                  href={SITE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-[11px] text-mute underline-offset-2 hover:text-lime hover:underline"
+                >
+                  {SITE_HOST}
+                </a>
+              </div>
+              {/* Corner mark — survives casual screenshots of the six-char board */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute bottom-2 right-2 select-none rounded bg-ink/70 px-1.5 py-0.5 font-mono text-[9px] leading-tight text-mute/90 sm:bottom-3 sm:right-3 sm:text-[10px]"
+              >
+                {SITE_HOST}
+              </div>
+              {display && <ShareBar display={display} gloss={gloss} />}
             </>
           )}
         </section>
