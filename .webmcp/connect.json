@@ -2,5 +2,6 @@
   "domain_id": "731c2b69-94e3-459f-a6e7-6c45ab0625be",
   "display_name": "ky-zhyz",
   "environment": "production",
-  "dashboard_url": "https://app.nekuda.ai/?domain=731c2b69-94e3-459f-a6e7-6c45ab0625be&environment=production"
+  "dashboard_url": "https://app.nekuda.ai/?domain=731c2b69-94e3-459f-a6e7-6c45ab0625be&environment=production",
+  "publisher_scope": "ky-zhyz"
 }
