@@ -1,0 +1,71 @@
+{
+  "tools": [
+    {
+      "name": "generate_phrase",
+      "description": "Turns a scene into a six-character ky,zhyz phrase with gloss and updates the board. Use when the user wants a new or locked regenerate for a rant scene.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "scene": {
+            "type": "string",
+            "description": "Scene to translate; omit to reuse the current scene on the page"
+          },
+          "lock_indices": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0, "maximum": 5 },
+            "description": "Optional slot indices 0–5 to keep; cannot lock all six"
+          }
+        }
+      },
+      "annotations": {
+        "untrustedContentHint": true
+      }
+    },
+    {
+      "name": "get_current_result",
+      "description": "Reads the current phrase, gloss, locks, and meme availability. Use when summarizing the board or before sharing without changing anything.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "untrustedContentHint": true
+      }
+    },
+    {
+      "name": "set_slot_locks",
+      "description": "Locks or clears character slots on the board before a regenerate. Use when the user wants to keep some chars and rewrite the rest.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "indices": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0, "maximum": 5 },
+            "description": "Slot indices 0–5 to lock; empty array clears all locks"
+          }
+        },
+        "required": ["indices"]
+      }
+    },
+    {
+      "name": "get_share_payload",
+      "description": "Builds China-social share copy and an attributed URL for the current phrase. Use when the user wants WeChat paste text, Moments caption, or Weibo title—without posting.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "enum": ["wechat", "moments", "weibo", "copy"],
+            "description": "Share channel that shapes the copy template"
+          }
+        },
+        "required": ["platform"]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "untrustedContentHint": true
+      }
+    }
+  ]
+}

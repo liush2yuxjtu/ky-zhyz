@@ -5,48 +5,23 @@ import { track } from "@vercel/analytics";
 import { MemePop } from "@/components/MemePop";
 import { ShareBar } from "@/components/ShareBar";
 import { SlotBoard } from "@/components/SlotBoard";
+import { WebMcpTools } from "@/components/WebMcpTools";
 import {
   markFromShare,
   parseInviteLanding,
   consumeFromShare,
   shouldFireInviteLand,
+  getOrCreateSharerId,
   SITE_HOST,
   SITE_URL,
 } from "@/lib/share";
-import type { CharVerdict, ValidationResult } from "@/lib/validator";
-
-type TopicPayload = {
-  id: string;
-  name: string;
-  note: string;
-  phrase: string;
-  /** Absent/null on fallback — Option A hides「看梗图」 */
-  memeSrc?: string | null;
-};
-
-type ApiOk = {
-  type?: "result";
-  ok: true;
-  phrase: string;
-  display: string;
-  gloss: string;
-  validation: ValidationResult;
-  attempts: number;
-  topic?: TopicPayload;
-};
-
-type ApiFail = {
-  type?: "result";
-  ok: false;
-  error: string;
-  attempts?: number;
-};
-
-type StreamEvent =
-  | { type: "start"; maxAttempts: number }
-  | { type: "attempt"; n: number; max: number }
-  | (ApiOk & { type: "result" })
-  | (ApiFail & { type: "result" });
+import {
+  readGenerateStream,
+  type ApiFail,
+  type ApiOk,
+  type CharVerdict,
+} from "@/lib/generate-client";
+import type { KyZhyzWebMcpAdapters } from "@/lib/webmcp/types";
 
 /** Auto-retry toggle label — must PASS ky,zhyz (了→又 so slot2=y). */
 const AUTO_RETRY_PHRASE = "垮又再会硬造";
@@ -63,64 +38,6 @@ const EXAMPLES: { label: string; scene: string }[] = [
   { label: "砍勇", scene: "复述评论区：砍勇最会游走" },
   { label: "野种", scene: "用经典原句嘲讽詹姆斯抽象操作" },
 ];
-
-async function readGenerateStream(
-  res: Response,
-  signal?: AbortSignal,
-): Promise<ApiOk | ApiFail> {
-  if (!res.body) {
-    return { ok: false, error: "网络挂了，再点一次" };
-  }
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let final: ApiOk | ApiFail | null = null;
-
-  const onAbort = () => {
-    void reader.cancel();
-  };
-  signal?.addEventListener("abort", onAbort);
-
-  try {
-    while (true) {
-      if (signal?.aborted) {
-        return { ok: false, error: "已取消硬造" };
-      }
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-
-      const chunks = buffer.split("\n\n");
-      buffer = chunks.pop() ?? "";
-
-      for (const chunk of chunks) {
-        const line = chunk
-          .split("\n")
-          .map((l) => l.trim())
-          .find((l) => l.startsWith("data:"));
-        if (!line) continue;
-        const raw = line.slice(5).trim();
-        if (!raw) continue;
-        let evt: StreamEvent;
-        try {
-          evt = JSON.parse(raw) as StreamEvent;
-        } catch {
-          continue;
-        }
-        if (evt.type === "result") {
-          final = evt;
-        }
-      }
-    }
-  } finally {
-    signal?.removeEventListener("abort", onAbort);
-  }
-
-  if (final) return final;
-  if (signal?.aborted) return { ok: false, error: "已取消硬造" };
-  return { ok: false, error: "这波没凑齐 ky,zhyz，点一下再试一次就好。" };
-}
 
 export default function Home() {
   const [scene, setScene] = useState("");
@@ -237,24 +154,29 @@ export default function Home() {
   }, []);
 
   const generate = useCallback(
-    async (override?: string, opts?: { fromExample?: boolean }) => {
+    async (
+      override?: string,
+      opts?: { fromExample?: boolean; lockMaskOverride?: boolean[] },
+    ) => {
       const text = (override ?? scene).trim();
       if (!text) {
         setError("先写一句你想吐的场景");
         textareaRef.current?.focus();
-        return;
+        return { ok: false as const, error: "先写一句你想吐的场景" };
       }
 
       abortRef.current?.abort();
       const ac = new AbortController();
       abortRef.current = ac;
 
+      const activeLocks = opts?.lockMaskOverride ?? lockedMask;
+
       setLoading(true);
       setError(null);
       setMemeOpen(false);
       setRetryTick(0);
       // Keep current board while locked-regenerating so fail does not wipe locks.
-      if (!lockedMask.some(Boolean)) {
+      if (!activeLocks.some(Boolean)) {
         setDisplay("");
         setGloss("");
         setSlots(undefined);
@@ -268,7 +190,7 @@ export default function Home() {
         auto_retry: autoRetryRef.current ? 1 : 0,
       });
 
-      const locksPayload = lockedMask.map((on, i) =>
+      const locksPayload = activeLocks.map((on, i) =>
         on && slots?.[i]?.char ? slots[i]!.char : null,
       );
 
@@ -278,7 +200,7 @@ export default function Home() {
           if (ac.signal.aborted) {
             setError("已取消硬造");
             setRetryTick(0);
-            return;
+            return { ok: false as const, error: "已取消硬造" };
           }
           round += 1;
           if (round > 1) setRetryTick(round);
@@ -309,7 +231,7 @@ export default function Home() {
               !ac.signal.aborted &&
               round < AUTO_RETRY_MAX;
             if (canRetry) continue;
-            if (!lockedMask.some(Boolean)) {
+            if (!activeLocks.some(Boolean)) {
               setDisplay("");
               setGloss("");
               setSlots(undefined);
@@ -317,17 +239,18 @@ export default function Home() {
               setMemeSrc("");
               setMemeNote("");
             }
+            let failErr = data.error || "生成出了点岔子，再试一次。";
             if (ac.signal.aborted) {
-              setError("已取消硬造");
+              failErr = "已取消硬造";
+              setError(failErr);
             } else if (autoRetryRef.current && round >= AUTO_RETRY_MAX) {
-              setError(
-                `试了 ${round} 轮仍垮——${AUTO_RETRY_PHRASE}也救不了，改场景或解锁再试。`,
-              );
+              failErr = `试了 ${round} 轮仍垮——${AUTO_RETRY_PHRASE}也救不了，改场景或解锁再试。`;
+              setError(failErr);
             } else {
-              setError(data.error || "生成出了点岔子，再试一次。");
+              setError(failErr);
             }
             setRetryTick(0);
-            return;
+            return { ok: false as const, error: failErr };
           }
 
           const data = await readGenerateStream(res, ac.signal);
@@ -369,7 +292,15 @@ export default function Home() {
             }
             setError(null);
             setRetryTick(0);
-            return;
+            return {
+              ok: true as const,
+              display: data.display,
+              gloss: data.gloss,
+              phrase: data.phrase,
+              attempts: typeof data.attempts === "number" ? data.attempts : round,
+              memeAvailable: Boolean(data.topic?.memeSrc),
+              memeTitle: data.topic?.memeSrc ? data.topic.name || "" : "",
+            };
           }
 
           track("generate_fail", {
@@ -385,7 +316,7 @@ export default function Home() {
             failMsg !== "已取消硬造";
           if (canRetry) continue;
 
-          if (!lockedMask.some(Boolean)) {
+          if (!activeLocks.some(Boolean)) {
             setDisplay("");
             setGloss("");
             setSlots(undefined);
@@ -393,38 +324,133 @@ export default function Home() {
             setMemeSrc("");
             setMemeNote("");
           }
+          let failErr =
+            failMsg || "这波没凑齐 ky,zhyz，点一下再试一次就好。";
           if (ac.signal.aborted || failMsg === "已取消硬造") {
-            setError("已取消硬造");
+            failErr = "已取消硬造";
+            setError(failErr);
           } else if (autoRetryRef.current && round >= AUTO_RETRY_MAX) {
-            setError(
-              `试了 ${round} 轮仍垮——${AUTO_RETRY_PHRASE}也救不了，改场景或解锁再试。`,
-            );
+            failErr = `试了 ${round} 轮仍垮——${AUTO_RETRY_PHRASE}也救不了，改场景或解锁再试。`;
+            setError(failErr);
           } else {
-            setError(
-              failMsg || "这波没凑齐 ky,zhyz，点一下再试一次就好。",
-            );
+            setError(failErr);
           }
           setRetryTick(0);
-          return;
+          return { ok: false as const, error: failErr };
         }
       } catch (err) {
+        let failErr = "网络挂了，再点一次";
         if (ac.signal.aborted || (err instanceof DOMException && err.name === "AbortError")) {
-          setError("已取消硬造");
+          failErr = "已取消硬造";
+          setError(failErr);
         } else {
           track("generate_fail", { round });
-          if (!lockedMask.some(Boolean)) {
+          if (!activeLocks.some(Boolean)) {
             setDisplay("");
             setSlots(undefined);
           }
-          setError("网络挂了，再点一次");
+          setError(failErr);
         }
         setRetryTick(0);
+        return { ok: false as const, error: failErr };
       } finally {
         setLoading(false);
       }
     },
     [scene, lockedMask, slots],
   );
+
+  const adaptersRef = useRef<KyZhyzWebMcpAdapters | null>(null);
+  adaptersRef.current = {
+    getBoard: () => ({
+      scene,
+      display,
+      gloss,
+      phrase: slots?.map((s) => s.char).join("") || display.replace(/，/g, ""),
+      slots: slots
+        ? slots.map((s) => ({
+            char: s.char,
+            index: s.index,
+            expected: s.expected,
+            pass: s.pass,
+          }))
+        : null,
+      locked: lockedMask,
+      memeAvailable: Boolean(memeSrc),
+      memeTitle,
+      loading,
+      error,
+    }),
+    setScene: (next) => {
+      setScene(next);
+    },
+    applyLocks: (indices) => {
+      if (!slots || slots.length < 6) {
+        return {
+          ok: false as const,
+          error: "No phrase on the board yet. Call generate_phrase first.",
+          code: "NO_RESULT",
+          retryable: false,
+        };
+      }
+      if (indices.length === 6) {
+        return {
+          ok: false as const,
+          error: "Cannot lock all six slots.",
+          code: "LOCK_ALL_FORBIDDEN",
+          retryable: false,
+        };
+      }
+      const next = [false, false, false, false, false, false];
+      for (const i of indices) {
+        if (i >= 0 && i <= 5) next[i] = true;
+      }
+      setLockedMask(next);
+      setLockHint(null);
+      return { ok: true as const, locked: next };
+    },
+    generate: async ({ scene: sceneOpt, lockIndices, signal }) => {
+      let lockMaskOverride: boolean[] | undefined;
+      if (lockIndices) {
+        if (!slots || slots.length < 6) {
+          return {
+            ok: false as const,
+            error: "No phrase on the board yet. Generate before locking.",
+          };
+        }
+        if (lockIndices.length === 6) {
+          return {
+            ok: false as const,
+            error: "Cannot lock all six slots — leave at least one free.",
+          };
+        }
+        const next = [false, false, false, false, false, false];
+        for (const i of lockIndices) {
+          if (i >= 0 && i <= 5) next[i] = true;
+        }
+        setLockedMask(next);
+        lockMaskOverride = next;
+      }
+      if (signal?.aborted) {
+        return { ok: false as const, error: "已取消硬造" };
+      }
+      const onAbort = () => abortRef.current?.abort();
+      signal?.addEventListener("abort", onAbort);
+      try {
+        const result = await generate(
+          sceneOpt,
+          lockMaskOverride ? { lockMaskOverride } : undefined,
+        );
+        if (!result) {
+          return { ok: false as const, error: "生成失败" };
+        }
+        return result;
+      } finally {
+        signal?.removeEventListener("abort", onAbort);
+      }
+    },
+    getSharerId: () => getOrCreateSharerId(),
+  };
 
   const showResult = Boolean(slots);
   const canMeme = Boolean(memeSrc);
@@ -444,6 +470,7 @@ export default function Home() {
 
   return (
     <main className="relative mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 pb-32 pt-6 sm:px-6 sm:pb-16 sm:pt-10">
+      <WebMcpTools adaptersRef={adaptersRef} />
       <header className="mb-5 sm:mb-6">
         <h1 className="font-display text-[20px] leading-none text-text sm:text-[26px]">
           <span className="text-magenta">ky</span>

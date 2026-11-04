@@ -1,0 +1,149 @@
+[
+  {
+    "name": "Direct generate from scene",
+    "messages": [
+      {
+        "role": "user",
+        "type": "message",
+        "content": "帮我把『奶茶加错糖还排队半小时』翻成 ky,zhyz"
+      }
+    ],
+    "expectedCall": [
+      {
+        "name": "generate_phrase",
+        "arguments": {
+          "scene": { "$pattern": ".*奶茶.*" }
+        }
+      }
+    ]
+  },
+  {
+    "name": "Read board after generate",
+    "messages": [
+      {
+        "role": "user",
+        "type": "message",
+        "content": "现在板上是什么六字？"
+      }
+    ],
+    "expectedCall": [
+      {
+        "name": "get_current_result",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "name": "Lock first two then regenerate",
+    "messages": [
+      {
+        "role": "user",
+        "type": "message",
+        "content": "锁住前两个字，其余重造"
+      }
+    ],
+    "expectedCall": [
+      {
+        "name": "set_slot_locks",
+        "arguments": {
+          "indices": [0, 1]
+        }
+      },
+      {
+        "name": "generate_phrase",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "name": "WeChat share copy",
+    "messages": [
+      {
+        "role": "user",
+        "type": "message",
+        "content": "给我微信口令文案和链接"
+      }
+    ],
+    "expectedCall": [
+      {
+        "name": "get_share_payload",
+        "arguments": {
+          "platform": "wechat"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Moments caption",
+    "messages": [
+      {
+        "role": "user",
+        "type": "message",
+        "content": "朋友圈配文怎么写"
+      }
+    ],
+    "expectedCall": [
+      {
+        "name": "get_share_payload",
+        "arguments": {
+          "platform": "moments"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Regenerate same scene shorthand",
+    "messages": [
+      {
+        "role": "user",
+        "type": "functioncall",
+        "content": {
+          "name": "generate_phrase",
+          "arguments": { "scene": "房租又涨房东还不修灯" }
+        }
+      },
+      {
+        "role": "user",
+        "type": "functionresponse",
+        "content": {
+          "name": "generate_phrase",
+          "response": {
+            "ok": true,
+            "display": "垮又再会硬造",
+            "gloss": "租金又涨灯坏不管",
+            "phrase": "垮又再会硬造"
+          }
+        }
+      },
+      {
+        "role": "user",
+        "type": "message",
+        "content": "再来一次"
+      }
+    ],
+    "expectedCall": [
+      {
+        "name": "generate_phrase",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "name": "Clear locks",
+    "messages": [
+      {
+        "role": "user",
+        "type": "message",
+        "content": "把锁定都清掉"
+      }
+    ],
+    "expectedCall": [
+      {
+        "name": "set_slot_locks",
+        "arguments": {
+          "indices": []
+        }
+      }
+    ]
+  }
+]
