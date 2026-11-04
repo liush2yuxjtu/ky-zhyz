@@ -1,6 +1,12 @@
 /// <reference types="webmcp-types" />
 
 import {
+  defineTool,
+  registerTools,
+  type ModelContextLike,
+  type ToolRegistration,
+} from "@nekuda/webmcp-sdk";
+import {
   buildShareCopy,
   buildShareUrl,
   type ShareChannel,
@@ -15,6 +21,18 @@ const TOOL_NAMES = [
 ] as const;
 
 export type RegisteredToolName = (typeof TOOL_NAMES)[number];
+
+const BUILT_WITH = "webmcp-kit/connect-existing-tools@mcp" as const;
+
+/** Bound just before registerTools; execute closes over this getter. */
+let getAdaptersRef: (() => KyZhyzWebMcpAdapters) | null = null;
+
+function getAdapters(): KyZhyzWebMcpAdapters {
+  if (!getAdaptersRef) {
+    throw new Error("WebMCP adapters not ready");
+  }
+  return getAdaptersRef();
+}
 
 export function hasModelContext(): boolean {
   return (
@@ -62,271 +80,307 @@ function normalizeIndices(raw: unknown): number[] | { error: string; code: strin
   return out;
 }
 
+type GeneratePhraseInput = {
+  scene?: string;
+  lock_indices?: number[];
+};
+
+type SetSlotLocksInput = {
+  indices: number[];
+};
+
+type GetSharePayloadInput = {
+  platform: string;
+};
+
 /**
- * Register ky,zhyz WebMCP tools on document.modelContext.
- * Uses AbortSignal for teardown. No-ops when modelContext is absent.
- * Always resolve structured { error, code, retryable } — never throw from execute.
+ * Case-2 migration: same wire names/schemas/handlers, registered through
+ * @nekuda/webmcp-sdk defineTool + registerTools.
  */
-export async function registerKyZhyzWebMcpTools(
-  getAdapters: () => KyZhyzWebMcpAdapters,
-  signal: AbortSignal,
-): Promise<RegisteredToolName[]> {
-  if (!hasModelContext() || signal.aborted) return [];
-
-  const registered: RegisteredToolName[] = [];
-  const ctx = document.modelContext!;
-
-  await ctx.registerTool(
-    {
-      name: "generate_phrase",
-      description:
-        "Turns a scene into a six-character ky,zhyz phrase with gloss and updates the board. Use when the user wants a new or locked regenerate for a rant scene.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          scene: {
-            type: "string",
-            description:
-              "Scene to translate; omit to reuse the current scene on the page",
-          },
-          lock_indices: {
-            type: "array",
-            items: { type: "integer", minimum: 0, maximum: 5 },
-            description:
-              "Optional slot indices 0–5 to keep; cannot lock all six",
-          },
-        },
+export const generatePhraseTool = defineTool<GeneratePhraseInput>({
+  stableKey: "adopted.generate_phrase",
+  name: "generate_phrase",
+  source: "merchant_authored",
+  description:
+    "Turns a scene into a six-character ky,zhyz phrase with gloss and updates the board. Use when the user wants a new or locked regenerate for a rant scene.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      scene: {
+        type: "string",
+        description:
+          "Scene to translate; omit to reuse the current scene on the page",
       },
-      annotations: {
-        untrustedContentHint: true,
-      },
-      async execute(input, { signal: execSignal }) {
-        try {
-          const adapters = getAdapters();
-          const sceneIn =
-            typeof input.scene === "string" ? input.scene.trim() : undefined;
-          let lockIndices: number[] | undefined;
-          if (input.lock_indices !== undefined) {
-            const norm = normalizeIndices(input.lock_indices);
-            if ("error" in norm) return norm;
-            lockIndices = norm;
-          }
-          const board = adapters.getBoard();
-          const scene = sceneIn || board.scene.trim();
-          if (!scene) {
-            return {
-              error:
-                "No scene yet. Ask the user for a short rant scene, then call generate_phrase with scene.",
-              code: "MISSING_SCENE",
-              retryable: false,
-            };
-          }
-          if (sceneIn) adapters.setScene(sceneIn);
-          const result = await adapters.generate({
-            scene,
-            lockIndices,
-            signal: execSignal,
-          });
-          if (!result.ok) {
-            return {
-              error: result.error,
-              code: "GENERATE_FAILED",
-              retryable: true,
-            };
-          }
-          return clipOutput({
-            ok: true,
-            display: result.display,
-            gloss: result.gloss,
-            phrase: result.phrase,
-            attempts: result.attempts,
-            meme_available: result.memeAvailable,
-            meme_title: result.memeTitle || undefined,
-          });
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : "generate failed";
-          return {
-            error: msg,
-            code: "GENERATE_FAILED",
-            retryable: true,
-          };
-        }
+      lock_indices: {
+        type: "array",
+        items: { type: "integer", minimum: 0, maximum: 5 },
+        description:
+          "Optional slot indices 0–5 to keep; cannot lock all six",
       },
     },
-    { signal },
-  );
-  registered.push("generate_phrase");
+  },
+  annotations: {
+    untrustedContentHint: true,
+  },
+  async execute(input, context) {
+    try {
+      const adapters = getAdapters();
+      const sceneIn =
+        typeof input.scene === "string" ? input.scene.trim() : undefined;
+      let lockIndices: number[] | undefined;
+      if (input.lock_indices !== undefined) {
+        const norm = normalizeIndices(input.lock_indices);
+        if ("error" in norm) return norm;
+        lockIndices = norm;
+      }
+      const board = adapters.getBoard();
+      const scene = sceneIn || board.scene.trim();
+      if (!scene) {
+        return {
+          error:
+            "No scene yet. Ask the user for a short rant scene, then call generate_phrase with scene.",
+          code: "MISSING_SCENE",
+          retryable: false,
+        };
+      }
+      if (sceneIn) adapters.setScene(sceneIn);
+      // SDK: context.signal is the agent cancel (Chrome 153+); older Chrome omits context.
+      const result = await adapters.generate({
+        scene,
+        lockIndices,
+        signal: context?.signal,
+      });
+      if (!result.ok) {
+        return {
+          error: result.error,
+          code: "GENERATE_FAILED",
+          retryable: true,
+        };
+      }
+      return clipOutput({
+        ok: true,
+        display: result.display,
+        gloss: result.gloss,
+        phrase: result.phrase,
+        attempts: result.attempts,
+        meme_available: result.memeAvailable,
+        meme_title: result.memeTitle || undefined,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "generate failed";
+      return {
+        error: msg,
+        code: "GENERATE_FAILED",
+        retryable: true,
+      };
+    }
+  },
+});
 
-  await ctx.registerTool(
-    {
-      name: "get_current_result",
-      description:
-        "Reads the current phrase, gloss, locks, and meme availability. Use when summarizing the board or before sharing without changing anything.",
-      inputSchema: {
-        type: "object",
-        properties: {},
-      },
-      annotations: {
-        readOnlyHint: true,
-        untrustedContentHint: true,
-      },
-      async execute() {
-        try {
-          const board = getAdapters().getBoard();
-          if (!board.slots || !board.display) {
-            return clipOutput({
-              empty: true,
-              scene: board.scene || null,
-              hint: "No phrase on the board yet. Call generate_phrase with a scene first.",
-              loading: board.loading,
-              error: board.error,
-            });
-          }
-          return clipOutput({
-            scene: board.scene,
-            display: board.display,
-            gloss: board.gloss,
-            phrase: board.phrase,
-            locked: board.locked,
-            slots: board.slots.map((s) => ({
-              index: s.index,
-              char: s.char,
-              expected: s.expected,
-              pass: s.pass,
-            })),
-            meme_available: board.memeAvailable,
-            meme_title: board.memeTitle || undefined,
-            loading: board.loading,
-            error: board.error,
-          });
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : "read failed";
-          return { error: msg, code: "READ_FAILED", retryable: false };
-        }
+export const getCurrentResultTool = defineTool({
+  stableKey: "adopted.get_current_result",
+  name: "get_current_result",
+  source: "merchant_authored",
+  description:
+    "Reads the current phrase, gloss, locks, and meme availability. Use when summarizing the board or before sharing without changing anything.",
+  inputSchema: {
+    type: "object",
+    properties: {},
+  },
+  annotations: {
+    readOnlyHint: true,
+    untrustedContentHint: true,
+  },
+  async execute() {
+    try {
+      const board = getAdapters().getBoard();
+      if (!board.slots || !board.display) {
+        return clipOutput({
+          empty: true,
+          scene: board.scene || null,
+          hint: "No phrase on the board yet. Call generate_phrase with a scene first.",
+          loading: board.loading,
+          error: board.error,
+        });
+      }
+      return clipOutput({
+        scene: board.scene,
+        display: board.display,
+        gloss: board.gloss,
+        phrase: board.phrase,
+        locked: board.locked,
+        slots: board.slots.map((s) => ({
+          index: s.index,
+          char: s.char,
+          expected: s.expected,
+          pass: s.pass,
+        })),
+        meme_available: board.memeAvailable,
+        meme_title: board.memeTitle || undefined,
+        loading: board.loading,
+        error: board.error,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "read failed";
+      return { error: msg, code: "READ_FAILED", retryable: false };
+    }
+  },
+});
+
+export const setSlotLocksTool = defineTool<SetSlotLocksInput>({
+  stableKey: "adopted.set_slot_locks",
+  name: "set_slot_locks",
+  source: "merchant_authored",
+  description:
+    "Locks or clears character slots on the board before a regenerate. Use when the user wants to keep some chars and rewrite the rest.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      indices: {
+        type: "array",
+        items: { type: "integer", minimum: 0, maximum: 5 },
+        description:
+          "Slot indices 0–5 to lock; empty array clears all locks",
       },
     },
-    { signal },
-  );
-  registered.push("get_current_result");
+    required: ["indices"],
+  },
+  async execute(input) {
+    try {
+      const norm = normalizeIndices(input.indices);
+      if ("error" in norm) return norm;
+      if (norm.length === 6) {
+        return {
+          error:
+            "Cannot lock all six slots — leave at least one free to rewrite. Ask the user which slots to keep.",
+          code: "LOCK_ALL_FORBIDDEN",
+          retryable: false,
+        };
+      }
+      const applied = getAdapters().applyLocks(norm);
+      if (!applied.ok) {
+        return {
+          error: applied.error,
+          code: applied.code,
+          retryable: applied.retryable,
+        };
+      }
+      return {
+        ok: true,
+        locked: applied.locked,
+        locked_count: applied.locked.filter(Boolean).length,
+      };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "lock failed";
+      return { error: msg, code: "LOCK_FAILED", retryable: false };
+    }
+  },
+});
 
-  await ctx.registerTool(
-    {
-      name: "set_slot_locks",
-      description:
-        "Locks or clears character slots on the board before a regenerate. Use when the user wants to keep some chars and rewrite the rest.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          indices: {
-            type: "array",
-            items: { type: "integer", minimum: 0, maximum: 5 },
-            description:
-              "Slot indices 0–5 to lock; empty array clears all locks",
-          },
-        },
-        required: ["indices"],
-      },
-      async execute(input) {
-        try {
-          const norm = normalizeIndices(input.indices);
-          if ("error" in norm) return norm;
-          if (norm.length === 6) {
-            return {
-              error:
-                "Cannot lock all six slots — leave at least one free to rewrite. Ask the user which slots to keep.",
-              code: "LOCK_ALL_FORBIDDEN",
-              retryable: false,
-            };
-          }
-          const applied = getAdapters().applyLocks(norm);
-          if (!applied.ok) {
-            return {
-              error: applied.error,
-              code: applied.code,
-              retryable: applied.retryable,
-            };
-          }
-          return {
-            ok: true,
-            locked: applied.locked,
-            locked_count: applied.locked.filter(Boolean).length,
-          };
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : "lock failed";
-          return { error: msg, code: "LOCK_FAILED", retryable: false };
-        }
+export const getSharePayloadTool = defineTool<GetSharePayloadInput>({
+  stableKey: "adopted.get_share_payload",
+  name: "get_share_payload",
+  source: "merchant_authored",
+  description:
+    "Builds China-social share copy and an attributed URL for the current phrase. Use when the user wants WeChat paste text, Moments caption, or Weibo title—without posting.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      platform: {
+        type: "string",
+        enum: ["wechat", "moments", "weibo", "copy"],
+        description: "Share channel that shapes the copy template",
       },
     },
-    { signal },
-  );
-  registered.push("set_slot_locks");
+    required: ["platform"],
+  },
+  annotations: {
+    readOnlyHint: true,
+    untrustedContentHint: true,
+  },
+  async execute(input) {
+    try {
+      const platform = String(input.platform || "") as ShareChannel;
+      if (!["wechat", "moments", "weibo", "copy"].includes(platform)) {
+        return {
+          error:
+            'platform must be one of: "wechat", "moments", "weibo", "copy".',
+          code: "INVALID_PLATFORM",
+          retryable: false,
+        };
+      }
+      const board = getAdapters().getBoard();
+      if (!board.display) {
+        return {
+          error:
+            "No phrase to share yet. Call generate_phrase first, then get_share_payload.",
+          code: "NO_RESULT",
+          retryable: false,
+        };
+      }
+      const sharerId = getAdapters().getSharerId();
+      const url = buildShareUrl(platform, sharerId);
+      const copy = buildShareCopy({
+        display: board.display,
+        gloss: board.gloss,
+        url,
+        platform,
+      });
+      return clipOutput({
+        platform,
+        copy,
+        url,
+        host: "ky-zhyz.inkwellnote.com",
+        note: "Show copy to the user to paste; do not post automatically.",
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "share build failed";
+      return { error: msg, code: "SHARE_FAILED", retryable: false };
+    }
+  },
+});
 
-  await ctx.registerTool(
-    {
-      name: "get_share_payload",
-      description:
-        "Builds China-social share copy and an attributed URL for the current phrase. Use when the user wants WeChat paste text, Moments caption, or Weibo title—without posting.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          platform: {
-            type: "string",
-            enum: ["wechat", "moments", "weibo", "copy"],
-            description: "Share channel that shapes the copy template",
-          },
-        },
-        required: ["platform"],
-      },
-      annotations: {
-        readOnlyHint: true,
-        untrustedContentHint: true,
-      },
-      async execute(input) {
-        try {
-          const platform = String(input.platform || "") as ShareChannel;
-          if (!["wechat", "moments", "weibo", "copy"].includes(platform)) {
-            return {
-              error:
-                'platform must be one of: "wechat", "moments", "weibo", "copy".',
-              code: "INVALID_PLATFORM",
-              retryable: false,
-            };
-          }
-          const board = getAdapters().getBoard();
-          if (!board.display) {
-            return {
-              error:
-                "No phrase to share yet. Call generate_phrase first, then get_share_payload.",
-              code: "NO_RESULT",
-              retryable: false,
-            };
-          }
-          const sharerId = getAdapters().getSharerId();
-          const url = buildShareUrl(platform, sharerId);
-          const copy = buildShareCopy({
-            display: board.display,
-            gloss: board.gloss,
-            url,
-            platform,
-          });
-          return clipOutput({
-            platform,
-            copy,
-            url,
-            host: "ky-zhyz.inkwellnote.com",
-            note: "Show copy to the user to paste; do not post automatically.",
-          });
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : "share build failed";
-          return { error: msg, code: "SHARE_FAILED", retryable: false };
-        }
-      },
-    },
-    { signal },
-  );
-  registered.push("get_share_payload");
+export const KY_ZHYZ_WEBMCP_TOOLS = [
+  generatePhraseTool,
+  getCurrentResultTool,
+  setSlotLocksTool,
+  getSharePayloadTool,
+] as const;
 
-  return registered;
+export type RegisterKyZhyzOptions = {
+  signal?: AbortSignal;
+  /** Injectable surface for tests; defaults to document.modelContext. */
+  modelContext?: ModelContextLike;
+};
+
+/**
+ * Bind adapters and register all four tools via the SDK.
+ * No-ops (empty registration handle) when modelContext is absent and none was injected.
+ * Cleanup: call the returned `unregister()` (or abort `options.signal`).
+ */
+export function registerKyZhyzWebMcpTools(
+  getAdaptersFn: () => KyZhyzWebMcpAdapters,
+  options: RegisterKyZhyzOptions = {},
+): ToolRegistration {
+  getAdaptersRef = getAdaptersFn;
+
+  if (!options.modelContext && !hasModelContext()) {
+    const ac = new AbortController();
+    return {
+      ready: Promise.resolve([]),
+      current: () => [],
+      unregister: () => {
+        /* no-op */
+      },
+      signal: ac.signal,
+    };
+  }
+
+  return registerTools([...KY_ZHYZ_WEBMCP_TOOLS], {
+    signal: options.signal,
+    modelContext: options.modelContext,
+    tracking: { builtWith: BUILT_WITH },
+  });
 }
 
-export { TOOL_NAMES };
+export { TOOL_NAMES, BUILT_WITH };

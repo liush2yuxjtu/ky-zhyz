@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  BUILT_WITH,
+  generatePhraseTool,
+  getCurrentResultTool,
+  getSharePayloadTool,
   hasModelContext,
   registerKyZhyzWebMcpTools,
+  setSlotLocksTool,
   TOOL_NAMES,
 } from "./register";
 import type { KyZhyzWebMcpAdapters, WebMcpBoardSnapshot } from "./types";
@@ -13,9 +18,17 @@ type CapturedTool = {
   inputSchema?: object;
   execute: (
     input: Record<string, unknown>,
-    opts: { signal: AbortSignal },
+    opts?: { signal: AbortSignal },
   ) => Promise<unknown>;
 };
+
+function mockModelContext(registerTool: ReturnType<typeof vi.fn>) {
+  return {
+    registerTool,
+    getTools: vi.fn(async () => []),
+  };
+}
+
 
 function emptyBoard(over: Partial<WebMcpBoardSnapshot> = {}): WebMcpBoardSnapshot {
   return {
@@ -53,7 +66,7 @@ describe("registerKyZhyzWebMcpTools", () => {
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).document = {
-      modelContext: { registerTool },
+      modelContext: mockModelContext(registerTool),
     };
 
     board = emptyBoard({
@@ -119,21 +132,38 @@ describe("registerKyZhyzWebMcpTools", () => {
     vi.restoreAllMocks();
   });
 
-  it("registers all four tools with AbortSignal", async () => {
+  it("registers all four tools via SDK with AbortSignal + builtWith", async () => {
     const ac = new AbortController();
-    const names = await registerKyZhyzWebMcpTools(() => adapters, ac.signal);
-    expect(names).toEqual([...TOOL_NAMES]);
+    const reg = registerKyZhyzWebMcpTools(() => adapters, {
+      signal: ac.signal,
+      modelContext: mockModelContext(registerTool),
+    });
+    const results = await reg.ready;
+    expect(results.map((r) => r.name)).toEqual([...TOOL_NAMES]);
+    expect(results.every((r) => r.state === "registered")).toBe(true);
     expect(registerTool).toHaveBeenCalledTimes(4);
     expect(captured.map((t) => t.name)).toEqual([...TOOL_NAMES]);
-    // second arg includes signal
-    expect(registerTool.mock.calls[0][1]).toEqual({ signal: ac.signal });
+    // SDK passes a per-tool register signal derived from the batch signal
+    expect(registerTool.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
+    expect(BUILT_WITH).toBe("webmcp-kit/connect-existing-tools@mcp");
+    // stableKeys + explicit wire names on defineTool exports
+    expect(generatePhraseTool.stableKey).toBe("adopted.generate_phrase");
+    expect(generatePhraseTool.name).toBe("generate_phrase");
+    expect(generatePhraseTool.source).toBe("merchant_authored");
+    expect(getCurrentResultTool.stableKey).toBe("adopted.get_current_result");
+    expect(setSlotLocksTool.stableKey).toBe("adopted.set_slot_locks");
+    expect(getSharePayloadTool.stableKey).toBe("adopted.get_share_payload");
+    reg.unregister();
   });
 
   it("generate_phrase happy path", async () => {
-    await registerKyZhyzWebMcpTools(() => adapters, new AbortController().signal);
-    const tool = captured.find((t) => t.name === "generate_phrase")!;
-    expect(tool.annotations).toEqual({ untrustedContentHint: true });
-    const out = (await tool.execute(
+    registerKyZhyzWebMcpTools(() => adapters, {
+      modelContext: mockModelContext(registerTool),
+    });
+    expect(generatePhraseTool.annotations).toEqual({
+      untrustedContentHint: true,
+    });
+    const out = (await generatePhraseTool.execute(
       { scene: "奶茶加错糖" },
       { signal: new AbortController().signal },
     )) as Record<string, unknown>;
@@ -144,9 +174,10 @@ describe("registerKyZhyzWebMcpTools", () => {
 
   it("generate_phrase missing scene resolves structured error", async () => {
     board = emptyBoard();
-    await registerKyZhyzWebMcpTools(() => adapters, new AbortController().signal);
-    const tool = captured.find((t) => t.name === "generate_phrase")!;
-    const out = (await tool.execute(
+    registerKyZhyzWebMcpTools(() => adapters, {
+      modelContext: mockModelContext(registerTool),
+    });
+    const out = (await generatePhraseTool.execute(
       {},
       { signal: new AbortController().signal },
     )) as Record<string, unknown>;
@@ -156,11 +187,12 @@ describe("registerKyZhyzWebMcpTools", () => {
   });
 
   it("get_current_result is readOnly and returns board", async () => {
-    await registerKyZhyzWebMcpTools(() => adapters, new AbortController().signal);
-    const tool = captured.find((t) => t.name === "get_current_result")!;
-    expect(tool.annotations?.readOnlyHint).toBe(true);
-    expect(tool.annotations?.untrustedContentHint).toBe(true);
-    const out = (await tool.execute(
+    registerKyZhyzWebMcpTools(() => adapters, {
+      modelContext: mockModelContext(registerTool),
+    });
+    expect(getCurrentResultTool.annotations?.readOnlyHint).toBe(true);
+    expect(getCurrentResultTool.annotations?.untrustedContentHint).toBe(true);
+    const out = (await getCurrentResultTool.execute(
       {},
       { signal: new AbortController().signal },
     )) as Record<string, unknown>;
@@ -169,10 +201,11 @@ describe("registerKyZhyzWebMcpTools", () => {
   });
 
   it("set_slot_locks forbids locking all six", async () => {
-    await registerKyZhyzWebMcpTools(() => adapters, new AbortController().signal);
-    const tool = captured.find((t) => t.name === "set_slot_locks")!;
-    expect(tool.annotations).toBeUndefined();
-    const out = (await tool.execute(
+    registerKyZhyzWebMcpTools(() => adapters, {
+      modelContext: mockModelContext(registerTool),
+    });
+    expect(setSlotLocksTool.annotations).toBeUndefined();
+    const out = (await setSlotLocksTool.execute(
       { indices: [0, 1, 2, 3, 4, 5] },
       { signal: new AbortController().signal },
     )) as Record<string, unknown>;
@@ -180,9 +213,10 @@ describe("registerKyZhyzWebMcpTools", () => {
   });
 
   it("set_slot_locks happy path", async () => {
-    await registerKyZhyzWebMcpTools(() => adapters, new AbortController().signal);
-    const tool = captured.find((t) => t.name === "set_slot_locks")!;
-    const out = (await tool.execute(
+    registerKyZhyzWebMcpTools(() => adapters, {
+      modelContext: mockModelContext(registerTool),
+    });
+    const out = (await setSlotLocksTool.execute(
       { indices: [0, 1] },
       { signal: new AbortController().signal },
     )) as Record<string, unknown>;
@@ -191,10 +225,11 @@ describe("registerKyZhyzWebMcpTools", () => {
   });
 
   it("get_share_payload builds wechat copy + url", async () => {
-    await registerKyZhyzWebMcpTools(() => adapters, new AbortController().signal);
-    const tool = captured.find((t) => t.name === "get_share_payload")!;
-    expect(tool.annotations?.readOnlyHint).toBe(true);
-    const out = (await tool.execute(
+    registerKyZhyzWebMcpTools(() => adapters, {
+      modelContext: mockModelContext(registerTool),
+    });
+    expect(getSharePayloadTool.annotations?.readOnlyHint).toBe(true);
+    const out = (await getSharePayloadTool.execute(
       { platform: "wechat" },
       { signal: new AbortController().signal },
     )) as Record<string, unknown>;
@@ -206,9 +241,10 @@ describe("registerKyZhyzWebMcpTools", () => {
 
   it("get_share_payload NO_RESULT when empty board", async () => {
     board = emptyBoard();
-    await registerKyZhyzWebMcpTools(() => adapters, new AbortController().signal);
-    const tool = captured.find((t) => t.name === "get_share_payload")!;
-    const out = (await tool.execute(
+    registerKyZhyzWebMcpTools(() => adapters, {
+      modelContext: mockModelContext(registerTool),
+    });
+    const out = (await getSharePayloadTool.execute(
       { platform: "moments" },
       { signal: new AbortController().signal },
     )) as Record<string, unknown>;
@@ -218,10 +254,9 @@ describe("registerKyZhyzWebMcpTools", () => {
   it("no-ops when modelContext missing", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).document = {};
-    const names = await registerKyZhyzWebMcpTools(
-      () => adapters,
-      new AbortController().signal,
-    );
-    expect(names).toEqual([]);
+    const reg = registerKyZhyzWebMcpTools(() => adapters);
+    const results = await reg.ready;
+    expect(results).toEqual([]);
+    expect(reg.current()).toEqual([]);
   });
 });

@@ -8,9 +8,9 @@ import {
 import type { KyZhyzWebMcpAdapters } from "@/lib/webmcp/types";
 
 /**
- * Registers native document.modelContext tools once on mount.
+ * Registers ky,zhyz WebMCP tools via @nekuda/webmcp-sdk once on mount.
  * Adapters are read via ref so registration stays stable across React renders.
- * Feature-detects modelContext; no-ops when absent (AbortController cleanup).
+ * Feature-detects modelContext; no-ops when absent. Cleanup via reg.unregister().
  */
 export function WebMcpTools({
   adaptersRef,
@@ -19,15 +19,14 @@ export function WebMcpTools({
 }) {
   useEffect(() => {
     if (!hasModelContext()) return;
-    const controller = new AbortController();
-    void registerKyZhyzWebMcpTools(() => {
+    const reg = registerKyZhyzWebMcpTools(() => {
       const adapters = adaptersRef.current;
       if (!adapters) {
         throw new Error("WebMCP adapters not ready");
       }
       return adapters;
-    }, controller.signal);
-    return () => controller.abort();
+    });
+    return () => reg.unregister();
   }, [adaptersRef]);
 
   return null;
