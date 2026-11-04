@@ -379,7 +379,10 @@ export function registerKyZhyzWebMcpTools(
   return registerTools([...KY_ZHYZ_WEBMCP_TOOLS], {
     signal: options.signal,
     modelContext: options.modelContext,
-    tracking: { builtWith: BUILT_WITH },
+    tracking: {
+      builtWith: BUILT_WITH,
+      apiKey: "wmk_tYUQKZj9a4BL6JcDqG4n6Y3z8NBSeOH9wg959YlFSwA" /* publishable key, safe to commit */,
+    },
   });
 }
 
